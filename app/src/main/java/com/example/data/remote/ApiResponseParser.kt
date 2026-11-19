@@ -16,10 +16,24 @@ object ApiResponseParser {
     fun extractErrorMessage(rawError: String?, fallback: String): String {
         if (rawError.isNullOrBlank()) return fallback
         return try {
-            val obj = JSONObject(rawError)
-            listOf("message", "error", "detail")
-                .firstNotNullOfOrNull { key -> obj.optString(key).takeIf { it.isNotBlank() && it != "null" } }
-                ?: fallback
+            val trimmed = rawError.trim()
+            if (trimmed.startsWith("{")) {
+                val obj = JSONObject(trimmed)
+                listOf("message", "error", "detail", "msg", "err")
+                    .firstNotNullOfOrNull { key ->
+                        val value = obj.opt(key)
+                        when (value) {
+                            is String -> value.takeIf { it.isNotBlank() && !it.equals("null", ignoreCase = true) }
+                            is JSONObject -> listOf("message", "detail").firstNotNullOfOrNull { k ->
+                                value.optString(k).takeIf { it.isNotBlank() && !it.equals("null", ignoreCase = true) }
+                            }
+                            is JSONArray -> if (value.length() > 0) value.optString(0).takeIf { it.isNotBlank() } else null
+                            else -> null
+                        }
+                    } ?: fallback
+            } else {
+                trimmed.take(200)
+            }
         } catch (_: Exception) {
             fallback
         }
@@ -236,25 +250,33 @@ object ApiResponseParser {
     private fun unwrapObject(rawJson: String): JSONObject? {
         val trimmed = rawJson.trim()
         if (!trimmed.startsWith("{")) return null
-        val root = JSONObject(trimmed)
-        return root.optJSONObject("data") ?: root.optJSONObject("summary") ?: root
+        return try {
+            val root = JSONObject(trimmed)
+            root.optJSONObject("data") ?: root.optJSONObject("summary") ?: root
+        } catch (_: Exception) {
+            null
+        }
     }
 
     private fun unwrapArray(rawJson: String, vararg keys: String): JSONArray? {
         val trimmed = rawJson.trim()
-        if (trimmed.startsWith("[")) return JSONArray(trimmed)
-        if (!trimmed.startsWith("{")) return null
-        val root = JSONObject(trimmed)
-        for (key in keys) {
-            root.optJSONArray(key)?.let { return it }
-        }
-        val nestedData = root.optJSONObject("data")
-        if (nestedData != null) {
+        return try {
+            if (trimmed.startsWith("[")) return JSONArray(trimmed)
+            if (!trimmed.startsWith("{")) return null
+            val root = JSONObject(trimmed)
             for (key in keys) {
-                nestedData.optJSONArray(key)?.let { return it }
+                root.optJSONArray(key)?.let { return it }
             }
+            val nestedData = root.optJSONObject("data")
+            if (nestedData != null) {
+                for (key in keys) {
+                    nestedData.optJSONArray(key)?.let { return it }
+                }
+            }
+            null
+        } catch (_: Exception) {
+            null
         }
-        return null
     }
 
     private fun firstNonBlank(vararg values: String?): String? {

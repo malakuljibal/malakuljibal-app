@@ -4,6 +4,8 @@ import com.example.data.local.AuthSession
 import com.example.domain.model.*
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
+import okhttp3.MultipartBody
+import okhttp3.RequestBody.Companion.toRequestBody
 import okhttp3.ResponseBody
 import retrofit2.Response
 import java.io.IOException
@@ -143,6 +145,31 @@ class LiveFamilyRepository(
                 documentDate = documentDate,
                 notes = notes
             )
+        )
+        handleResponse(response) { Unit }
+    }
+
+    suspend fun uploadDocumentFile(
+        baseUrl: String,
+        familyId: String,
+        title: String,
+        category: String,
+        documentDate: String,
+        notes: String?,
+        filePart: MultipartBody.Part
+    ): ApiResult<Unit> = safeCall {
+        val titleBody = title.toRequestBody(MultipartBody.FORM)
+        val categoryBody = category.toRequestBody(MultipartBody.FORM)
+        val dateBody = documentDate.toRequestBody(MultipartBody.FORM)
+        val notesBody = notes?.toRequestBody(MultipartBody.FORM)
+
+        val response = clientProvider.getService(baseUrl).uploadDocument(
+            familyId = familyId,
+            title = titleBody,
+            category = categoryBody,
+            documentDate = dateBody,
+            notes = notesBody,
+            file = filePart
         )
         handleResponse(response) { Unit }
     }

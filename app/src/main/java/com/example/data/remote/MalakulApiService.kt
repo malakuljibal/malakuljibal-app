@@ -1,12 +1,16 @@
 package com.example.data.remote
 
 import com.squareup.moshi.Json
+import okhttp3.MultipartBody
+import okhttp3.RequestBody
 import okhttp3.ResponseBody
 import retrofit2.Response
 import retrofit2.http.Body
 import retrofit2.http.DELETE
 import retrofit2.http.GET
+import retrofit2.http.Multipart
 import retrofit2.http.POST
+import retrofit2.http.Part
 import retrofit2.http.Path
 
 data class LoginRequest(
@@ -100,6 +104,17 @@ interface MalakulApiService {
     suspend fun createDocument(
         @Path("family_id") familyId: String,
         @Body request: CreateDocumentRequest
+    ): Response<ResponseBody>
+
+    @Multipart
+    @POST("v1/families/{family_id}/documents/upload")
+    suspend fun uploadDocument(
+        @Path("family_id") familyId: String,
+        @Part("title") title: RequestBody,
+        @Part("category") category: RequestBody,
+        @Part("document_date") documentDate: RequestBody,
+        @Part("notes") notes: RequestBody?,
+        @Part file: MultipartBody.Part
     ): Response<ResponseBody>
 
     @DELETE("v1/families/{family_id}/documents/{id}")

@@ -15,7 +15,8 @@ import java.util.concurrent.TimeUnit
  * 'Content-Type: application/json' on every API request while redacting auth headers from logs.
  */
 class RetrofitClientProvider(
-    private val tokenProvider: () -> String?
+    private val tokenProvider: () -> String?,
+    private val onUnauthorized: (() -> Unit)? = null
 ) {
     private val moshi: Moshi = Moshi.Builder()
         .add(KotlinJsonAdapterFactory())
@@ -24,14 +25,26 @@ class RetrofitClientProvider(
     private val headerInterceptor = Interceptor { chain ->
         val original = chain.request()
         val builder = original.newBuilder()
-            .header("Content-Type", "application/json")
-            .header("Accept", "application/json")
+
+        // Only inject application/json if Content-Type is not already specified (e.g. multipart/form-data)
+        if (original.header("Content-Type") == null) {
+            builder.header("Content-Type", "application/json")
+        }
+        builder.header("Accept", "application/json")
 
         val token = tokenProvider()
         if (!token.isNullOrBlank() && !original.url.encodedPath.endsWith("/auth/login")) {
             builder.header("Authorization", "Bearer $token")
         }
         chain.proceed(builder.build())
+    }
+
+    private val authErrorInterceptor = Interceptor { chain ->
+        val response = chain.proceed(chain.request())
+        if (response.code == 401 && !chain.request().url.encodedPath.endsWith("/auth/login")) {
+            onUnauthorized?.invoke()
+        }
+        response
     }
 
     private val loggingInterceptor = HttpLoggingInterceptor().apply {
@@ -42,6 +55,7 @@ class RetrofitClientProvider(
 
     private val okHttpClient: OkHttpClient = OkHttpClient.Builder()
         .addInterceptor(headerInterceptor)
+        .addInterceptor(authErrorInterceptor)
         .addInterceptor(loggingInterceptor)
         .connectTimeout(20, TimeUnit.SECONDS)
         .readTimeout(25, TimeUnit.SECONDS)

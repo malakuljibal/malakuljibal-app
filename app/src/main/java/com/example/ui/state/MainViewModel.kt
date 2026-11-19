@@ -172,7 +172,10 @@ class MainViewModel(
 
     private val mockSource: FamilyDataSource = MockFamilyDataSource()
     private val sessionManager = SessionManager(application)
-    private val clientProvider = RetrofitClientProvider(tokenProvider = { sessionManager.getToken() })
+    private val clientProvider = RetrofitClientProvider(
+        tokenProvider = { sessionManager.getToken() },
+        onUnauthorized = { handleTokenExpired() }
+    )
     private val liveRepository = LiveFamilyRepository(clientProvider)
 
     private val _uiState: MutableStateFlow<MalakulUiState>
@@ -564,18 +567,37 @@ class MainViewModel(
         }
     }
 
-    fun addDocument(title: String, category: String, documentDate: String, notes: String) {
+    fun addDocument(
+        title: String,
+        category: String,
+        documentDate: String,
+        notes: String,
+        filePart: okhttp3.MultipartBody.Part? = null
+    ) {
         val session = _uiState.value.authSession ?: return
         viewModelScope.launch {
             _uiState.update { it.copy(isSubmitting = true, globalError = null, actionMessage = null) }
-            when (val res = liveRepository.createDocument(
-                baseUrl = _uiState.value.apiConfig.baseUrl,
-                familyId = session.familyId,
-                title = title,
-                category = category,
-                documentDate = documentDate,
-                notes = notes
-            )) {
+            val res = if (filePart != null) {
+                liveRepository.uploadDocumentFile(
+                    baseUrl = _uiState.value.apiConfig.baseUrl,
+                    familyId = session.familyId,
+                    title = title,
+                    category = category,
+                    documentDate = documentDate,
+                    notes = notes,
+                    filePart = filePart
+                )
+            } else {
+                liveRepository.createDocument(
+                    baseUrl = _uiState.value.apiConfig.baseUrl,
+                    familyId = session.familyId,
+                    title = title,
+                    category = category,
+                    documentDate = documentDate,
+                    notes = notes
+                )
+            }
+            when (res) {
                 is ApiResult.Success -> {
                     _uiState.update { it.copy(isSubmitting = false, actionMessage = "Document added to vault.") }
                     loadDocuments()
