@@ -351,8 +351,8 @@ class MainViewModel(
         }
     }
 
-    private fun handleTokenExpired(message: String) {
-        logout(expiredMessage = "Session expired: $message Please sign in again.")
+    private fun handleTokenExpired(message: String = "Session expired.") {
+        logout(expiredMessage = "$message Please sign in again.")
     }
 
     private var localCacheJob: Job? = null
