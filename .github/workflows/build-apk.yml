@@ -24,7 +24,7 @@ jobs:
 
     - name: Ensure gradle wrapper
       run: |
-        gradle wrapper
+        gradle wrapper --gradle-version 8.11.1
 
     - name: Build Debug APK
       run: |
