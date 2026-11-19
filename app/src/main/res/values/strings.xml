@@ -1,0 +1,18 @@
+<resources>
+    <string name="app_name">Malakul Jibal</string>
+    <string name="brand_title">MALAKUL JIBAL</string>
+    <string name="brand_tagline">Our Family. Our Health. Our Legacy.</string>
+    <string name="nav_home">Home</string>
+    <string name="nav_family">Family</string>
+    <string name="nav_finance">Finance</string>
+    <string name="nav_health">Health</string>
+    <string name="nav_documents">Documents</string>
+    <string name="nav_profile">Profile</string>
+    <string name="nav_calendar">Calendar</string>
+    <string name="nav_child_dev">Child Growth</string>
+    <string name="demo_mode_badge">PHASE 1 · MOCK DATA PREVIEW</string>
+    <string name="demo_mode_subtitle">Offline frontend preview — backend sync via api.malakuljibal.com paused for Phase 6.</string>
+    <string name="medical_disclaimer">Health and pediatric tracking screens are for private record organization only and do not provide medical diagnosis or clinical advice.</string>
+    <string name="privacy_restricted_title">Restricted Record</string>
+    <string name="privacy_restricted_body">This section is private by default and visible only to the record owner or explicitly authorized family roles.</string>
+</resources>

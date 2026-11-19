@@ -1,0 +1,6 @@
+{
+  "name": "Malakul Jibal",
+  "description": "Private family command center for household profiles, finances, health records, document vault, and child development.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
