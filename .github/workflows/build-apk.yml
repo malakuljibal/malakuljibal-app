@@ -37,6 +37,16 @@ jobs:
         chmod +x gradlew
         ./gradlew assembleDebug --no-daemon --stacktrace
 
+    - name: Upload Build Reports on Failure
+      if: failure()
+      uses: actions/upload-artifact@v4
+      with:
+        name: build-reports-and-logs
+        path: |
+          build/reports/
+          app/build/reports/
+          app/build/outputs/logs/
+
     - name: Upload APK Artifact
       uses: actions/upload-artifact@v4
       with:
