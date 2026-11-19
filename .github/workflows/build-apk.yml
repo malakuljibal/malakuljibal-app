@@ -24,9 +24,9 @@ jobs:
 
     - name: Ensure gradle wrapper
       run: |
-        curl -sL -o gradle.zip https://services.gradle.org/distributions/gradle-8.11.1-bin.zip
+        curl -sL -o gradle.zip https://services.gradle.org/distributions/gradle-9.3.1-bin.zip
         unzip -q gradle.zip
-        ./gradle-8.11.1/bin/gradle wrapper --gradle-version 8.11.1
+        ./gradle-9.3.1/bin/gradle wrapper --gradle-version 9.3.1
 
     - name: Generate debug keystore
       run: |
