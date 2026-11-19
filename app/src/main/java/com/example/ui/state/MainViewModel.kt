@@ -10,6 +10,7 @@ import com.example.data.local.SessionManager
 import com.example.data.local.entity.DocumentEntity
 import com.example.data.local.entity.MedicalRecordEntity
 import com.example.data.local.entity.TransactionEntity
+import com.example.data.sync.FamilySyncWorker
 import com.example.data.mock.MockFamilyDataSource
 import com.example.data.remote.ApiResult
 import com.example.data.remote.LiveFamilyRepository
@@ -240,6 +241,7 @@ class MainViewModel(
 
         if (hasLiveSession) {
             observeLocalCache(savedSession.familyId)
+            FamilySyncWorker.schedulePeriodicSync(application)
             refreshAllLiveData()
         }
     }
@@ -259,6 +261,7 @@ class MainViewModel(
                     val session = result.data
                     sessionManager.saveSession(session)
                     observeLocalCache(session.familyId)
+                    FamilySyncWorker.schedulePeriodicSync(getApplication())
                     _uiState.update { current ->
                         current.copy(
                             authSession = session,
@@ -292,6 +295,7 @@ class MainViewModel(
 
     fun logout(expiredMessage: String? = null) {
         val familyId = _uiState.value.authSession?.familyId
+        FamilySyncWorker.cancelPeriodicSync(getApplication())
         sessionManager.clearSession()
         if (familyId != null) {
             viewModelScope.launch {
