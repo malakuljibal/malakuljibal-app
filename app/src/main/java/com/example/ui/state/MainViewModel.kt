@@ -4,8 +4,12 @@ import android.app.Application
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.core.config.ApiConfig
+import com.example.data.local.AppDatabase
 import com.example.data.local.AuthSession
 import com.example.data.local.SessionManager
+import com.example.data.local.entity.DocumentEntity
+import com.example.data.local.entity.MedicalRecordEntity
+import com.example.data.local.entity.TransactionEntity
 import com.example.data.mock.MockFamilyDataSource
 import com.example.data.remote.ApiResult
 import com.example.data.remote.LiveFamilyRepository
@@ -14,6 +18,7 @@ import com.example.domain.model.*
 import com.example.domain.rbac.AccessControl
 import com.example.domain.repository.FamilyDataSource
 import com.example.ui.theme.ThemeMode
+import kotlinx.coroutines.Job
 import kotlinx.coroutines.async
 import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -172,6 +177,7 @@ class MainViewModel(
 
     private val mockSource: FamilyDataSource = MockFamilyDataSource()
     private val sessionManager = SessionManager(application)
+    private val appDatabase = AppDatabase.getDatabase(application)
     private val clientProvider = RetrofitClientProvider(
         tokenProvider = { sessionManager.getToken() },
         onUnauthorized = { handleTokenExpired() }
@@ -233,6 +239,7 @@ class MainViewModel(
         uiState = _uiState.asStateFlow()
 
         if (hasLiveSession) {
+            observeLocalCache(savedSession.familyId)
             refreshAllLiveData()
         }
     }
@@ -251,6 +258,7 @@ class MainViewModel(
                 is ApiResult.Success -> {
                     val session = result.data
                     sessionManager.saveSession(session)
+                    observeLocalCache(session.familyId)
                     _uiState.update { current ->
                         current.copy(
                             authSession = session,
@@ -283,7 +291,15 @@ class MainViewModel(
     }
 
     fun logout(expiredMessage: String? = null) {
+        val familyId = _uiState.value.authSession?.familyId
         sessionManager.clearSession()
+        if (familyId != null) {
+            viewModelScope.launch {
+                appDatabase.transactionDao().clearTransactions(familyId)
+                appDatabase.documentDao().clearDocuments(familyId)
+                appDatabase.medicalRecordDao().clearMedicalRecords(familyId)
+            }
+        }
         _uiState.update { current ->
             current.copy(
                 authSession = null,
@@ -333,6 +349,47 @@ class MainViewModel(
 
     private fun handleTokenExpired(message: String) {
         logout(expiredMessage = "Session expired: $message Please sign in again.")
+    }
+
+    private var localCacheJob: Job? = null
+
+    private fun observeLocalCache(familyId: String) {
+        localCacheJob?.cancel()
+        localCacheJob = viewModelScope.launch {
+            launch {
+                appDatabase.transactionDao().getTransactions(familyId).collect { entities ->
+                    if (entities.isNotEmpty()) {
+                        _uiState.update { current ->
+                            if (current.isLiveMode) {
+                                current.copy(transactions = entities.map { it.toDomain() })
+                            } else current
+                        }
+                    }
+                }
+            }
+            launch {
+                appDatabase.documentDao().getDocuments(familyId).collect { entities ->
+                    if (entities.isNotEmpty()) {
+                        _uiState.update { current ->
+                            if (current.isLiveMode) {
+                                current.copy(documents = entities.map { it.toDomain() })
+                            } else current
+                        }
+                    }
+                }
+            }
+            launch {
+                appDatabase.medicalRecordDao().getMedicalRecords(familyId).collect { entities ->
+                    if (entities.isNotEmpty()) {
+                        _uiState.update { current ->
+                            if (current.isLiveMode) {
+                                current.copy(medicalRecords = entities.map { it.toDomain() })
+                            } else current
+                        }
+                    }
+                }
+            }
+        }
     }
 
     // --- Live API Data Loading ---
@@ -392,6 +449,23 @@ class MainViewModel(
                     .map { it.message }
                     .distinct()
 
+                // Cache fetched records into local Room SQLite database
+                if (txRes is ApiResult.Success) {
+                    appDatabase.transactionDao().insertTransactions(
+                        txRes.data.map { TransactionEntity.fromDomain(it, familyId) }
+                    )
+                }
+                if (healthRes is ApiResult.Success) {
+                    appDatabase.medicalRecordDao().insertMedicalRecords(
+                        healthRes.data.map { MedicalRecordEntity.fromDomain(it, familyId) }
+                    )
+                }
+                if (docsRes is ApiResult.Success) {
+                    appDatabase.documentDao().insertDocuments(
+                        docsRes.data.map { DocumentEntity.fromDomain(it, familyId) }
+                    )
+                }
+
                 _uiState.update { current ->
                     val newSummary = (summaryRes as? ApiResult.Success)?.data ?: current.financialSummary
                     val newTx = (txRes as? ApiResult.Success)?.data ?: current.transactions
@@ -450,6 +524,11 @@ class MainViewModel(
                 if (txRes is ApiResult.Unauthorized) { handleTokenExpired(txRes.message); return@coroutineScope }
 
                 val err = (sumRes as? ApiResult.Error)?.message ?: (txRes as? ApiResult.Error)?.message
+                if (txRes is ApiResult.Success) {
+                    appDatabase.transactionDao().insertTransactions(
+                        txRes.data.map { TransactionEntity.fromDomain(it, session.familyId) }
+                    )
+                }
                 _uiState.update { current ->
                     current.copy(
                         isLoadingFinance = false,
@@ -511,7 +590,12 @@ class MainViewModel(
         viewModelScope.launch {
             _uiState.update { it.copy(isLoadingHealth = true, globalError = null) }
             when (val res = liveRepository.fetchHealthRecords(_uiState.value.apiConfig.baseUrl, session.familyId, session.userId)) {
-                is ApiResult.Success -> _uiState.update { it.copy(isLoadingHealth = false, medicalRecords = res.data) }
+                is ApiResult.Success -> {
+                    appDatabase.medicalRecordDao().insertMedicalRecords(
+                        res.data.map { MedicalRecordEntity.fromDomain(it, session.familyId) }
+                    )
+                    _uiState.update { it.copy(isLoadingHealth = false, medicalRecords = res.data) }
+                }
                 is ApiResult.Unauthorized -> handleTokenExpired(res.message)
                 is ApiResult.Error -> _uiState.update { it.copy(isLoadingHealth = false, globalError = res.message) }
             }
@@ -560,7 +644,12 @@ class MainViewModel(
                 defaultOwnerId = session.userId,
                 defaultOwnerName = session.fullName
             )) {
-                is ApiResult.Success -> _uiState.update { it.copy(isLoadingDocuments = false, documents = res.data) }
+                is ApiResult.Success -> {
+                    appDatabase.documentDao().insertDocuments(
+                        res.data.map { DocumentEntity.fromDomain(it, session.familyId) }
+                    )
+                    _uiState.update { it.copy(isLoadingDocuments = false, documents = res.data) }
+                }
                 is ApiResult.Unauthorized -> handleTokenExpired(res.message)
                 is ApiResult.Error -> _uiState.update { it.copy(isLoadingDocuments = false, globalError = res.message) }
             }
@@ -618,6 +707,7 @@ class MainViewModel(
                 documentId = documentId
             )) {
                 is ApiResult.Success -> {
+                    appDatabase.documentDao().deleteDocumentById(documentId)
                     _uiState.update { it.copy(isSubmitting = false, actionMessage = "Document deleted.") }
                     loadDocuments()
                 }
