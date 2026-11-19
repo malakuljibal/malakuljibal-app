@@ -27,7 +27,7 @@ data class TransactionEntity(
         val parsedAccessLevel = try {
             AccessLevel.valueOf(accessLevel)
         } catch (_: Exception) {
-            AccessLevel.FULL_FAMILY
+            AccessLevel.FAMILY_SHARED
         }
         return TransactionItem(
             id = id,

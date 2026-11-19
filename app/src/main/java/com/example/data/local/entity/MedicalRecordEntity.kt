@@ -23,7 +23,7 @@ data class MedicalRecordEntity(
         val acc = try {
             AccessLevel.valueOf(accessLevel)
         } catch (_: Exception) {
-            AccessLevel.FULL_FAMILY
+            AccessLevel.FAMILY_SHARED
         }
         return MedicalRecord(
             id = id,

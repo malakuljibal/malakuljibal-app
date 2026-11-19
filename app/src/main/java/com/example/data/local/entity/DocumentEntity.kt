@@ -42,7 +42,7 @@ data class DocumentEntity(
         val acc = try {
             AccessLevel.valueOf(accessLevel)
         } catch (_: Exception) {
-            AccessLevel.FULL_FAMILY
+            AccessLevel.FAMILY_SHARED
         }
         val tagList = if (tagsRaw.isBlank()) emptyList() else tagsRaw.split(",").map { it.trim() }
 
