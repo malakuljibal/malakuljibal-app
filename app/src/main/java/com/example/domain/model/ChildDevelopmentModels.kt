@@ -1,11 +1,11 @@
 package com.example.domain.model
 
 enum class MilestoneDomain(val label: String) {
-    GROSS_MOTOR("Gross Motor"),
-    FINE_MOTOR("Fine Motor"),
-    LANGUAGE("Language"),
-    COGNITIVE("Cognitive"),
-    SOCIAL_EMOTIONAL("Social & Emotional")
+    GROSS_MOTOR("Motorik Kasar"),
+    FINE_MOTOR("Motorik Halus"),
+    LANGUAGE("Bahasa & Komunikasi"),
+    COGNITIVE("Kognitif"),
+    SOCIAL_EMOTIONAL("Sosial & Emosional")
 }
 
 data class ChildProfile(

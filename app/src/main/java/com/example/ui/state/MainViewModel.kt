@@ -212,7 +212,7 @@ class MainViewModel(
                 selectedChildMemberId = MockFamilyDataSource.ID_ZAYD,
                 announcements = mockSource.getAnnouncements(),
                 financialSummary = if (hasLiveSession) {
-                    FinancialSummary("Live Household Ledger", "$", 0, 0, 0, 0, 1)
+                    FinancialSummary("Buku Kas Keluarga", "Rp ", 0, 0, 0, 0, 1)
                 } else {
                     mockSource.getFinancialSummary()
                 },

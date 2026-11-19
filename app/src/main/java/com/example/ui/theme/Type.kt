@@ -29,25 +29,25 @@ val DataMonoFamily = FontFamily(
 
 val MalakulTypography = Typography(
     displayLarge = TextStyle(
-        fontFamily = EditorialSerifFamily,
+        fontFamily = ModernSansFamily,
         fontWeight = FontWeight.Bold,
-        fontSize = 36.sp,
-        lineHeight = 42.sp,
-        letterSpacing = 0.2.sp
+        fontSize = 32.sp,
+        lineHeight = 38.sp,
+        letterSpacing = (-0.5).sp
     ),
     displayMedium = TextStyle(
-        fontFamily = EditorialSerifFamily,
+        fontFamily = ModernSansFamily,
         fontWeight = FontWeight.SemiBold,
-        fontSize = 28.sp,
-        lineHeight = 34.sp,
-        letterSpacing = 0.15.sp
-    ),
-    headlineLarge = TextStyle(
-        fontFamily = EditorialSerifFamily,
-        fontWeight = FontWeight.Bold,
         fontSize = 26.sp,
         lineHeight = 32.sp,
-        letterSpacing = 0.15.sp
+        letterSpacing = (-0.3).sp
+    ),
+    headlineLarge = TextStyle(
+        fontFamily = ModernSansFamily,
+        fontWeight = FontWeight.Bold,
+        fontSize = 24.sp,
+        lineHeight = 30.sp,
+        letterSpacing = (-0.2).sp
     ),
     headlineMedium = TextStyle(
         fontFamily = ModernSansFamily,

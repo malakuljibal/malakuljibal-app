@@ -1,8 +1,8 @@
 package com.example.domain.model
 
 enum class TransactionType(val label: String) {
-    INCOME("Income"),
-    EXPENSE("Expense")
+    INCOME("Pemasukan"),
+    EXPENSE("Pengeluaran")
 }
 
 data class FinancialSummary(

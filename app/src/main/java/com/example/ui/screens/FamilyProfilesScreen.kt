@@ -201,9 +201,9 @@ fun FamilyProfilesScreen(
                             modifier = Modifier.fillMaxWidth(),
                             horizontalArrangement = Arrangement.SpaceBetween
                         ) {
-                            MetricStatBlock("Weight", "${childProfile.latestWeightKg} kg", modifier = Modifier.weight(1f))
-                            MetricStatBlock("Height/Length", "${childProfile.latestLengthCm} cm", modifier = Modifier.weight(1f))
-                            MetricStatBlock("Head Circ.", "${childProfile.latestHeadCircumferenceCm} cm", modifier = Modifier.weight(1f))
+                            MetricStatBlock("Berat", "${childProfile.latestWeightKg} kg", modifier = Modifier.weight(1f))
+                            MetricStatBlock("Tinggi", "${childProfile.latestLengthCm} cm", modifier = Modifier.weight(1f))
+                            MetricStatBlock("Lingkar Kpl", "${childProfile.latestHeadCircumferenceCm} cm", modifier = Modifier.weight(1f))
                         }
                         Spacer(Modifier.height(8.dp))
                         Text(

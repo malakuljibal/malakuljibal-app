@@ -1,12 +1,12 @@
 package com.example.domain.model
 
 enum class EventCategory(val label: String) {
-    MEDICAL("Medical"),
-    VACCINATION("Vaccination"),
-    DOCUMENT_EXPIRY("Document Expiry"),
-    FINANCE("Financial Deadline"),
-    FAMILY("Family Event"),
-    PERSONAL("Personal Reminder")
+    MEDICAL("Pemeriksaan Medis"),
+    VACCINATION("Imunisasi / Vaksin"),
+    DOCUMENT_EXPIRY("Masa Berlaku Dokumen"),
+    FINANCE("Tenggat Keuangan"),
+    FAMILY("Acara Keluarga"),
+    PERSONAL("Pengingat Pribadi")
 }
 
 data class FamilyEvent(

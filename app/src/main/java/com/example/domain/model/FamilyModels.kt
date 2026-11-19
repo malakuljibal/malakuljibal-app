@@ -3,13 +3,13 @@ package com.example.domain.model
 import androidx.annotation.DrawableRes
 
 enum class RelationshipType(val displayName: String) {
-    HUSBAND("Husband & Father"),
-    WIFE("Wife & Mother"),
-    SON("Son"),
-    DAUGHTER("Daughter"),
-    FATHER("Father (Grandfather)"),
-    MOTHER("Mother (Grandmother)"),
-    RELATIVE("Relative")
+    HUSBAND("Suami & Ayah"),
+    WIFE("Istri & Ibu"),
+    SON("Anak Laki-laki"),
+    DAUGHTER("Anak Perempuan"),
+    FATHER("Ayah / Kakek"),
+    MOTHER("Ibu / Nenek"),
+    RELATIVE("Kerabat / Keluarga")
 }
 
 enum class UserRole(
@@ -18,42 +18,42 @@ enum class UserRole(
     val description: String
 ) {
     SUPER_ADMIN(
-        displayName = "Family Administrator",
+        displayName = "Administrator Keluarga",
         shortBadge = "Super Admin",
-        description = "Full household command, permissions governance, shared finances, and vault oversight."
+        description = "Akses penuh pengaturan keluarga, izin anggota, keuangan bersama, dan brankas dokumen."
     ),
     PARENT(
-        displayName = "Parent",
-        shortBadge = "Parent",
-        description = "Manages own profile, shared household data, and authorized child profiles."
+        displayName = "Orang Tua",
+        shortBadge = "Orang Tua",
+        description = "Mengelola profil pribadi, data rumah tangga bersama, dan profil anak."
     ),
     FAMILY_MEMBER(
-        displayName = "Family Member",
-        shortBadge = "Member",
-        description = "Accesses own personal profile, shared family events, and explicitly permitted records."
+        displayName = "Anggota Keluarga",
+        shortBadge = "Anggota",
+        description = "Mengakses profil pribadi, agenda keluarga bersama, dan catatan yang diizinkan."
     ),
     CHILD_PROFILE(
-        displayName = "Child Profile",
-        shortBadge = "Child",
-        description = "Managed by authorized parents without independent login; includes pediatric tracking."
+        displayName = "Profil Anak",
+        shortBadge = "Anak",
+        description = "Dikelola oleh orang tua tanpa akun mandiri; mencakup pemantauan tumbuh kembang."
     )
 }
 
 enum class AccessLevel(val label: String) {
-    FAMILY_SHARED("Family Shared"),
-    ADMIN_ONLY("Admin Only"),
-    PRIVATE_PERSONAL("Private"),
-    PARENT_MANAGED("Parent Managed")
+    FAMILY_SHARED("Bersama Keluarga"),
+    ADMIN_ONLY("Khusus Admin"),
+    PRIVATE_PERSONAL("Pribadi"),
+    PARENT_MANAGED("Dikelola Orang Tua")
 }
 
 enum class AppModule(val label: String) {
-    COMMAND_CENTER("Family Command Center"),
-    PROFILES("Personal Profiles"),
-    FINANCE("Finance & Budgeting"),
-    HEALTH("Health & Medical Records"),
-    DOCUMENTS("Document Vault"),
-    CHILD_DEVELOPMENT("Baby & Child Development"),
-    CALENDAR("Family Calendar")
+    COMMAND_CENTER("Pusat Kendali Keluarga"),
+    PROFILES("Profil Anggota"),
+    FINANCE("Keuangan & Anggaran"),
+    HEALTH("Kesehatan & Medis"),
+    DOCUMENTS("Brankas Dokumen"),
+    CHILD_DEVELOPMENT("Tumbuh Kembang Anak"),
+    CALENDAR("Kalender Keluarga")
 }
 
 data class ModulePermission(

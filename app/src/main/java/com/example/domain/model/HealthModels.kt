@@ -1,11 +1,11 @@
 package com.example.domain.model
 
 enum class MeasurementType(val label: String, val unit: String) {
-    BLOOD_PRESSURE("Blood Pressure", "mmHg"),
-    WEIGHT("Weight", "kg"),
-    HEIGHT("Height", "cm"),
-    TEMPERATURE("Temperature", "°C"),
-    BLOOD_GLUCOSE("Blood Glucose", "mg/dL")
+    BLOOD_PRESSURE("Tekanan Darah", "mmHg"),
+    WEIGHT("Berat Badan", "kg"),
+    HEIGHT("Tinggi Badan", "cm"),
+    TEMPERATURE("Suhu Tubuh", "°C"),
+    BLOOD_GLUCOSE("Gula Darah", "mg/dL")
 }
 
 data class MedicalProfile(

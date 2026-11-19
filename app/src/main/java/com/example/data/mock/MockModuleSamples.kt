@@ -15,12 +15,12 @@ object MockModuleSamples {
 
     val financialSummary = FinancialSummary(
         monthLabel = "November 2026",
-        currencySymbol = "$",
-        monthlyIncome = 9450,
-        monthlyExpenses = 5620,
-        availableCash = 14820,
-        totalSavings = 68400,
-        monthlyBudgetLimit = 6400
+        currencySymbol = "Rp ",
+        monthlyIncome = 19450000,
+        monthlyExpenses = 12620000,
+        availableCash = 24820000,
+        totalSavings = 128400000,
+        monthlyBudgetLimit = 15000000
     )
 
     val monthlyComparisons = listOf(

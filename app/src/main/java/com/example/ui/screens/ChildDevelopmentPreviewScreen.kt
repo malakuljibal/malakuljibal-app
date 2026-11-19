@@ -224,9 +224,9 @@ fun ChildDevelopmentPreviewScreen(
                         modifier = Modifier.fillMaxWidth(),
                         horizontalArrangement = Arrangement.SpaceBetween
                     ) {
-                        MetricStatBlock("Weight", "${latest?.weightKg ?: 0f} kg", MalakulTheme.colors.onNavyHero, modifier = Modifier.weight(1f))
-                        MetricStatBlock("Length/Height", "${latest?.lengthCm ?: 0f} cm", MalakulTheme.colors.onNavyHero, modifier = Modifier.weight(1f))
-                        MetricStatBlock("Head Circ.", "${latest?.headCircumferenceCm ?: 0f} cm", MalakulTheme.colors.onNavyHero, modifier = Modifier.weight(1f))
+                        MetricStatBlock("Berat", "${latest?.weightKg ?: 0f} kg", MalakulTheme.colors.onNavyHero, modifier = Modifier.weight(1f))
+                        MetricStatBlock("Panjang/Tinggi", "${latest?.lengthCm ?: 0f} cm", MalakulTheme.colors.onNavyHero, modifier = Modifier.weight(1f))
+                        MetricStatBlock("Lingkar Kepala", "${latest?.headCircumferenceCm ?: 0f} cm", MalakulTheme.colors.onNavyHero, modifier = Modifier.weight(1f))
                     }
                 }
             }
@@ -310,9 +310,9 @@ fun ChildDevelopmentPreviewScreen(
                         }
                         Spacer(Modifier.height(8.dp))
                         Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
-                            MetricStatBlock("Weight", "${gm.weightKg} kg", modifier = Modifier.weight(1f))
-                            MetricStatBlock("Length", "${gm.lengthCm} cm", modifier = Modifier.weight(1f))
-                            MetricStatBlock("Head Circ.", "${gm.headCircumferenceCm} cm", modifier = Modifier.weight(1f))
+                            MetricStatBlock("Berat", "${gm.weightKg} kg", modifier = Modifier.weight(1f))
+                            MetricStatBlock("Panjang", "${gm.lengthCm} cm", modifier = Modifier.weight(1f))
+                            MetricStatBlock("Lingkar Kpl", "${gm.headCircumferenceCm} cm", modifier = Modifier.weight(1f))
                         }
                     }
                 }

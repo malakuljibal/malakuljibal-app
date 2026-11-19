@@ -1,24 +1,24 @@
 package com.example.domain.model
 
 enum class DocumentCategory(val displayName: String) {
-    ALL("All"),
-    IDENTITY("Identity Cards"),
-    BIRTH_CERT("Birth Certificates"),
-    MARRIAGE_CERT("Marriage Certificates"),
-    PASSPORT("Passports"),
-    EDUCATION("Education"),
-    INSURANCE("Insurance"),
-    PROPERTY("Property"),
-    VEHICLE("Vehicle"),
-    FINANCIAL("Financial"),
-    MEDICAL("Medical"),
-    OTHER("Other")
+    ALL("Semua"),
+    IDENTITY("Kartu Identitas"),
+    BIRTH_CERT("Akta Kelahiran"),
+    MARRIAGE_CERT("Buku / Akta Nikah"),
+    PASSPORT("Paspor"),
+    EDUCATION("Pendidikan / Ijazah"),
+    INSURANCE("Asuransi"),
+    PROPERTY("Sertifikat Properti"),
+    VEHICLE("Surat Kendaraan"),
+    FINANCIAL("Keuangan / Pajak"),
+    MEDICAL("Rekam Medis"),
+    OTHER("Lainnya")
 }
 
 enum class DocumentStatus(val label: String) {
-    ACTIVE("Valid"),
-    EXPIRING_SOON("Expiring Soon"),
-    ARCHIVED("Archived")
+    ACTIVE("Berlaku"),
+    EXPIRING_SOON("Segera Kedaluwarsa"),
+    ARCHIVED("Diarsipkan")
 }
 
 data class FamilyDocument(
