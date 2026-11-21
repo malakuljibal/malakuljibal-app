@@ -35,11 +35,9 @@ jobs:
     - name: Build Debug APK
       run: |
         chmod +x gradlew
-        ./gradlew assembleDebug --no-daemon --stacktrace --info 2>&1 | tee build_output.log || {
-          echo "=================== TAIL OF BUILD LOG ==================="
-          tail -n 250 build_output.log
-          exit 1
-        }
+        ./gradlew assembleDebug --no-daemon --stacktrace
+        echo "=== Checking generated APK files ==="
+        find app/build/outputs/ -type f || true
 
     - name: Upload Build Reports on Failure
       if: failure()
