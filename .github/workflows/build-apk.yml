@@ -35,7 +35,14 @@ jobs:
     - name: Build Debug APK
       run: |
         chmod +x gradlew
-        ./gradlew assembleDebug --no-daemon --stacktrace
+        ./gradlew assembleDebug --no-daemon --stacktrace > build.log 2>&1 || BUILD_FAILED=1
+        if [ "$BUILD_FAILED" = "1" ]; then
+          echo "::error::Build failed! Printing compiler and task errors:"
+          grep -E "e: |Error:|FAILED|FAILURE" build.log | head -n 40 | while IFS= read -r line; do
+            echo "::error::$line"
+          done
+          exit 1
+        fi
         echo "=== Checking generated APK files ==="
         find app/build/outputs/ -type f || true
 
