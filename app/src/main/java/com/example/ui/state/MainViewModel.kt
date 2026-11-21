@@ -883,7 +883,7 @@ class MainViewModel(
                 current.members + member
             }
 
-            val updatedFamily = current.family?.copy(
+            val updatedFamily = current.family.copy(
                 description = if (current.family.adminMemberId == member.id) {
                     current.family.description
                 } else current.family.description
@@ -913,7 +913,7 @@ class MainViewModel(
         val newId = "mem_${System.currentTimeMillis()}"
         val newMember = FamilyMember(
             id = newId,
-            familyId = _uiState.value.family?.id ?: "fam_001",
+            familyId = _uiState.value.family.id,
             fullName = fullName.trim(),
             shortName = shortName.trim().ifBlank { fullName.trim() },
             initials = initials,
