@@ -94,7 +94,7 @@ fun FamilyProfileManagementScreen(
                             .size(48.dp)
                     ) {
                         Icon(
-                            Icons.Rounded.PersonAdd,
+                            Icons.Rounded.Add,
                             contentDescription = "Tambah Anggota",
                             tint = MalakulTheme.colors.gold
                         )
@@ -267,7 +267,7 @@ fun FamilyProfileManagementScreen(
 
                 // Detail Information Rows
                 InfoDetailItem(
-                    icon = Icons.Outlined.Badge,
+                    icon = Icons.Outlined.AccountCircle,
                     label = "Nama Lengkap & Panggilan",
                     value = "${activeMember.fullName} (${activeMember.shortName})"
                 )
@@ -285,7 +285,7 @@ fun FamilyProfileManagementScreen(
                 )
                 Spacer(Modifier.height(8.dp))
                 InfoDetailItem(
-                    icon = Icons.Outlined.FamilyRestroom,
+                    icon = Icons.Outlined.Groups,
                     label = "Peran / Hubungan",
                     value = "${activeMember.relationship.displayName} (${activeMember.role.displayName})"
                 )
@@ -306,7 +306,7 @@ fun FamilyProfileManagementScreen(
                 if (activeMember.bio.isNotBlank()) {
                     Spacer(Modifier.height(8.dp))
                     InfoDetailItem(
-                        icon = Icons.Outlined.Notes,
+                        icon = Icons.Outlined.Description,
                         label = "Bio / Catatan Pribadi",
                         value = activeMember.bio
                     )

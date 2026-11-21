@@ -35,7 +35,11 @@ jobs:
     - name: Build Debug APK
       run: |
         chmod +x gradlew
-        ./gradlew assembleDebug --no-daemon --stacktrace
+        ./gradlew assembleDebug --no-daemon --stacktrace || {
+          echo "=================== COMPILER / BUILD ERROR DETAILS ==================="
+          find app/build -name "*.txt" -o -name "*.log" | xargs -r head -n 100
+          exit 1
+        }
 
     - name: Upload Build Reports on Failure
       if: failure()
