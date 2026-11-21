@@ -125,7 +125,7 @@ fun ProfileAndSettingsScreen(
                         ),
                         modifier = Modifier.fillMaxWidth()
                     ) {
-                        Icon(Icons.Default.Edit, contentDescription = null, modifier = Modifier.size(16.dp))
+                        Icon(Icons.Outlined.Edit, contentDescription = null, modifier = Modifier.size(16.dp))
                         Spacer(Modifier.width(8.dp))
                         Text(strings.manageFamilyProfiles, style = MaterialTheme.typography.labelLarge)
                     }

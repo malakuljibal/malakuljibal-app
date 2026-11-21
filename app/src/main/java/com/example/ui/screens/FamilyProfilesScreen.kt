@@ -81,7 +81,7 @@ fun FamilyProfilesScreen(
                     )
                 ) {
                     Icon(
-                        imageVector = Icons.Default.Edit,
+                        imageVector = Icons.Outlined.Edit,
                         contentDescription = "Kelola Profil",
                         modifier = Modifier.size(18.dp)
                     )
@@ -150,7 +150,7 @@ fun FamilyProfilesScreen(
                             modifier = Modifier.height(34.dp),
                             contentPadding = PaddingValues(horizontal = 12.dp, vertical = 4.dp)
                         ) {
-                            Icon(Icons.Default.Edit, contentDescription = null, modifier = Modifier.size(14.dp))
+                            Icon(Icons.Outlined.Edit, contentDescription = null, modifier = Modifier.size(14.dp))
                             Spacer(Modifier.width(4.dp))
                             Text("Edit Profil", style = MaterialTheme.typography.labelSmall)
                         }
