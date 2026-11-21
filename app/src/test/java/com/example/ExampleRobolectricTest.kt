@@ -14,6 +14,8 @@ import org.junit.Assert.assertFalse
 import org.junit.Assert.assertNotNull
 import org.junit.Assert.assertNull
 import org.junit.Assert.assertTrue
+import com.example.ui.i18n.AppLanguage
+import com.example.ui.i18n.getAppStrings
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.robolectric.RobolectricTestRunner
@@ -106,5 +108,26 @@ class ExampleRobolectricTest {
         assertTrue(AccessControl.canViewMedicalProfile(tariq, zayd, zaydMed))
         assertFalse(AccessControl.canViewFinanceOverview(hafiz))
         assertTrue(AccessControl.canViewFinanceOverview(tariq))
+    }
+
+    @Test
+    fun `app language switcher and session persistence work properly`() {
+        val context = ApplicationProvider.getApplicationContext<Context>()
+        val manager = SessionManager(context)
+        
+        // Default language is Indonesian
+        assertEquals("id", manager.getAppLanguage())
+        assertEquals("Beranda", getAppStrings(AppLanguage.INDONESIAN).navHome)
+
+        // Save English
+        manager.saveAppLanguage(AppLanguage.ENGLISH.code)
+        assertEquals("en", manager.getAppLanguage())
+        assertEquals("Home", getAppStrings(AppLanguage.ENGLISH).navHome)
+        assertEquals("Settings & Profile", getAppStrings(AppLanguage.ENGLISH).settingsTitle)
+
+        // Restore Indonesian
+        manager.saveAppLanguage(AppLanguage.INDONESIAN.code)
+        assertEquals("id", manager.getAppLanguage())
+        assertEquals("Pengaturan & Profil", getAppStrings(AppLanguage.INDONESIAN).settingsTitle)
     }
 }

@@ -1,0 +1,18 @@
+<resources>
+    <string name="app_name">Samawa</string>
+    <string name="brand_title">SAMAWA</string>
+    <string name="brand_tagline">Keluarga Kita. Kesehatan Kita. Warisan Kita.</string>
+    <string name="nav_home">Beranda</string>
+    <string name="nav_family">Keluarga</string>
+    <string name="nav_finance">Keuangan</string>
+    <string name="nav_health">Kesehatan</string>
+    <string name="nav_documents">Brankas</string>
+    <string name="nav_profile">Profil</string>
+    <string name="nav_calendar">Kalender</string>
+    <string name="nav_child_dev">Tumbuh Kembang</string>
+    <string name="demo_mode_badge">MODE KELUARGA · AKTIF</string>
+    <string name="demo_mode_subtitle">Aplikasi keluarga terpadu — terhubung ke server api.malakuljibal.com.</string>
+    <string name="medical_disclaimer">Catatan kesehatan dan tumbuh kembang anak ini hanya untuk pengorganisasian arsip pribadi keluarga, bukan sebagai pengganti diagnosis atau nasihat medis klinis.</string>
+    <string name="privacy_restricted_title">Catatan Terbatas / Pribadi</string>
+    <string name="privacy_restricted_body">Bagian ini bersifat privat dan hanya dapat diakses oleh pemilik catatan atau anggota keluarga yang diberikan izin khusus.</string>
+</resources>

@@ -22,6 +22,8 @@ import com.example.ui.components.*
 import com.example.ui.state.MalakulUiState
 import com.example.ui.theme.DataMonoFamily
 import com.example.ui.theme.MalakulTheme
+import com.example.ui.i18n.AppLanguage
+import com.example.ui.i18n.LocalAppStrings
 import com.example.ui.theme.ThemeMode
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -32,12 +34,15 @@ fun ProfileAndSettingsScreen(
     onLogout: () -> Unit,
     onSwitchActiveUser: (String) -> Unit,
     onSetThemeMode: (ThemeMode) -> Unit,
+    onSetAppLanguage: (AppLanguage) -> Unit = {},
     onUpdateApiBaseUrl: (String) -> Unit,
     onOpenAuthScreen: () -> Unit,
     onNavigateBack: () -> Unit,
+    onOpenManageProfiles: () -> Unit = {},
     modifier: Modifier = Modifier
 ) {
     val activeUser = state.activeUser
+    val strings = LocalAppStrings.current
     var apiUrlInput by remember(state.apiConfig.baseUrl) { mutableStateOf(state.apiConfig.baseUrl) }
     var savedToast by remember { mutableStateOf(false) }
 
@@ -49,7 +54,7 @@ fun ProfileAndSettingsScreen(
                 title = {
                     Column {
                         Text("ACCOUNT & GOVERNANCE", style = MaterialTheme.typography.labelSmall, color = MalakulTheme.colors.gold)
-                        Text("Profile & System Settings", style = MaterialTheme.typography.titleLarge)
+                        Text(strings.settingsTitle, style = MaterialTheme.typography.titleLarge)
                     }
                 },
                 navigationIcon = {
@@ -111,6 +116,19 @@ fun ProfileAndSettingsScreen(
                         style = MaterialTheme.typography.bodySmall,
                         color = MalakulTheme.colors.onNavyHero.copy(alpha = 0.8f)
                     )
+                    Spacer(Modifier.height(12.dp))
+                    FilledTonalButton(
+                        onClick = onOpenManageProfiles,
+                        colors = ButtonDefaults.filledTonalButtonColors(
+                            containerColor = MalakulTheme.colors.gold,
+                            contentColor = MalakulTheme.colors.navyHero
+                        ),
+                        modifier = Modifier.fillMaxWidth()
+                    ) {
+                        Icon(Icons.Default.Edit, contentDescription = null, modifier = Modifier.size(16.dp))
+                        Spacer(Modifier.width(8.dp))
+                        Text(strings.manageFamilyProfiles, style = MaterialTheme.typography.labelLarge)
+                    }
                 }
             }
 
@@ -143,7 +161,7 @@ fun ProfileAndSettingsScreen(
                         ) {
                             Icon(Icons.Outlined.Logout, contentDescription = null, tint = MalakulTheme.colors.danger, modifier = Modifier.size(18.dp))
                             Spacer(Modifier.width(6.dp))
-                            Text("Sign Out", color = MalakulTheme.colors.danger)
+                            Text(strings.signOut, color = MalakulTheme.colors.danger)
                         }
                     }
                 } else {
@@ -198,9 +216,9 @@ fun ProfileAndSettingsScreen(
                                         Text("${member.role.displayName} · ${member.relationship.displayName}", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
                                     }
                                     if (isCurrent) {
-                                        Icon(Icons.Rounded.CheckCircle, contentDescription = "Active session", tint = MalakulTheme.colors.gold)
+                                        Icon(Icons.Rounded.CheckCircle, contentDescription = strings.activeSession, tint = MalakulTheme.colors.gold)
                                     } else {
-                                        Text("Switch", style = MaterialTheme.typography.labelLarge, color = MalakulTheme.colors.gold)
+                                        Text(strings.switchProfile, style = MaterialTheme.typography.labelLarge, color = MalakulTheme.colors.gold)
                                     }
                                 }
                             }
@@ -209,9 +227,36 @@ fun ProfileAndSettingsScreen(
                 }
             }
 
+            // Language Selection (Bahasa Indonesia & English)
+            item {
+                SectionHeader(title = strings.languageSectionTitle, subtitle = strings.languageSectionSubtitle)
+                Spacer(Modifier.height(8.dp))
+                MalakulCard(modifier = Modifier.fillMaxWidth()) {
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.spacedBy(8.dp)
+                    ) {
+                        AppLanguage.entries.forEach { lang ->
+                            val selected = state.appLanguage == lang
+                            FilterChip(
+                                selected = selected,
+                                onClick = { onSetAppLanguage(lang) },
+                                modifier = Modifier
+                                    .weight(1f)
+                                    .testTag("app_language_${lang.code}"),
+                                label = { Text("${lang.flag} ${lang.displayName}") },
+                                leadingIcon = if (selected) {
+                                    { Icon(Icons.Rounded.CheckCircle, contentDescription = null, modifier = Modifier.size(16.dp)) }
+                                } else null
+                            )
+                        }
+                    }
+                }
+            }
+
             // Appearance (Light / Dark / System Theme)
             item {
-                SectionHeader(title = "Appearance", subtitle = "Warm Ivory Light & Obsidian Navy Dark themes")
+                SectionHeader(title = strings.appearanceSectionTitle, subtitle = strings.appearanceSectionSubtitle)
                 Spacer(Modifier.height(8.dp))
                 MalakulCard(modifier = Modifier.fillMaxWidth()) {
                     Row(
@@ -220,13 +265,18 @@ fun ProfileAndSettingsScreen(
                     ) {
                         ThemeMode.entries.forEach { mode ->
                             val selected = state.themeMode == mode
+                            val label = when (mode) {
+                                ThemeMode.LIGHT -> strings.themeLight
+                                ThemeMode.DARK -> strings.themeDark
+                                ThemeMode.SYSTEM -> strings.themeSystem
+                            }
                             FilterChip(
                                 selected = selected,
                                 onClick = { onSetThemeMode(mode) },
                                 modifier = Modifier
                                     .weight(1f)
                                     .testTag("theme_mode_${mode.name.lowercase()}"),
-                                label = { Text(mode.label) },
+                                label = { Text(label) },
                                 leadingIcon = {
                                     val icon = when (mode) {
                                         ThemeMode.LIGHT -> Icons.Outlined.LightMode
@@ -244,8 +294,8 @@ fun ProfileAndSettingsScreen(
             // Configurable Backend Base URL
             item {
                 SectionHeader(
-                    title = "REST API Server Config",
-                    subtitle = "Live Hostinger PHP 8.x REST API endpoint"
+                    title = strings.apiConfigTitle,
+                    subtitle = strings.apiConfigSubtitle
                 )
                 Spacer(Modifier.height(8.dp))
                 MalakulCard(modifier = Modifier.fillMaxWidth()) {
@@ -254,7 +304,7 @@ fun ProfileAndSettingsScreen(
                         horizontalArrangement = Arrangement.SpaceBetween,
                         verticalAlignment = Alignment.CenterVertically
                     ) {
-                        Text("Connection Status", style = MaterialTheme.typography.labelMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                        Text(strings.connectionStatus, style = MaterialTheme.typography.labelMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
                         Surface(
                             shape = RoundedCornerShape(999.dp),
                             color = if (state.isLiveMode) MalakulTheme.colors.successContainer else MalakulTheme.colors.mockBannerBg
@@ -288,7 +338,7 @@ fun ProfileAndSettingsScreen(
                         verticalAlignment = Alignment.CenterVertically
                     ) {
                         Text(
-                            text = if (savedToast) "Base URL saved" else "Bearer JWT + application/json",
+                            text = if (savedToast) strings.urlSavedToast else "Bearer JWT + application/json",
                             style = MaterialTheme.typography.bodySmall,
                             color = if (savedToast) MalakulTheme.colors.success else MaterialTheme.colorScheme.onSurfaceVariant
                         )
@@ -301,7 +351,7 @@ fun ProfileAndSettingsScreen(
                                 .testTag("save_api_url_button")
                                 .defaultMinSize(minHeight = 48.dp)
                         ) {
-                            Text("Save URL")
+                            Text(strings.saveUrl)
                         }
                     }
                 }
@@ -310,7 +360,7 @@ fun ProfileAndSettingsScreen(
             // Module Permissions Matrix
             item {
                 SectionHeader(
-                    title = "Active Role Permissions",
+                    title = strings.activeRolePermissions,
                     subtitle = "Assigned module access for ${activeUser.shortName}"
                 )
             }

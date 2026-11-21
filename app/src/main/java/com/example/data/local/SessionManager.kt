@@ -73,7 +73,15 @@ class SessionManager(context: Context) {
     }
 
     fun saveApiBaseUrl(url: String) {
-        prefs.edit().putString(KEY_API_BASE_URL, url.trim()).apply()
+        prefs.edit().putString(KEY_API_BASE_URL, url).apply()
+    }
+
+    fun getAppLanguage(): String {
+        return prefs.getString(KEY_APP_LANGUAGE, "id") ?: "id"
+    }
+
+    fun saveAppLanguage(languageCode: String) {
+        prefs.edit().putString(KEY_APP_LANGUAGE, languageCode).apply()
     }
 
     fun getApiBaseUrl(): String {
@@ -155,5 +163,6 @@ class SessionManager(context: Context) {
         private const val KEY_EMAIL = "email"
         private const val KEY_ROLE = "role"
         private const val KEY_API_BASE_URL = "api_base_url"
+        private const val KEY_APP_LANGUAGE = "app_language"
     }
 }

@@ -22,6 +22,7 @@ import com.example.ui.theme.ThemeMode
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.async
 import kotlinx.coroutines.coroutineScope
+import com.example.ui.i18n.AppLanguage
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -31,6 +32,7 @@ import kotlinx.coroutines.launch
 data class MalakulUiState(
     val apiConfig: ApiConfig = ApiConfig(),
     val themeMode: ThemeMode = ThemeMode.LIGHT,
+    val appLanguage: AppLanguage = AppLanguage.INDONESIAN,
     val authSession: AuthSession? = null,
     val isLiveMode: Boolean = false,
     val showAuthScreen: Boolean = true,
@@ -191,6 +193,7 @@ class MainViewModel(
     init {
         val savedSession = sessionManager.loadSession()
         val savedUrl = sessionManager.getApiBaseUrl()
+        val savedLangCode = sessionManager.getAppLanguage()
         val hasLiveSession = savedSession != null
 
         _uiState = MutableStateFlow(
@@ -201,6 +204,7 @@ class MainViewModel(
                     isBackendConnected = hasLiveSession,
                     syncStatusLabel = if (hasLiveSession) "Live API · Syncing" else "Sign in to connect"
                 ),
+                appLanguage = AppLanguage.fromCode(savedLangCode),
                 authSession = savedSession,
                 isLiveMode = hasLiveSession,
                 showAuthScreen = !hasLiveSession,
@@ -816,6 +820,11 @@ class MainViewModel(
         _uiState.update { it.copy(themeMode = mode) }
     }
 
+    fun setAppLanguage(language: AppLanguage) {
+        sessionManager.saveAppLanguage(language.code)
+        _uiState.update { it.copy(appLanguage = language) }
+    }
+
     fun toggleQuickTheme() {
         _uiState.update { current ->
             val next = if (current.themeMode == ThemeMode.DARK) ThemeMode.LIGHT else ThemeMode.DARK
@@ -861,6 +870,91 @@ class MainViewModel(
 
     fun clearFeedbackMessages() {
         _uiState.update { it.copy(globalError = null, actionMessage = null) }
+    }
+
+    fun saveFamilyMemberProfile(member: FamilyMember) {
+        _uiState.update { current ->
+            val existingIndex = current.members.indexOfFirst { it.id == member.id }
+            val updatedMembers = if (existingIndex >= 0) {
+                current.members.toMutableList().apply {
+                    set(existingIndex, member)
+                }
+            } else {
+                current.members + member
+            }
+
+            val updatedFamily = current.family?.copy(
+                description = if (current.family.adminMemberId == member.id) {
+                    current.family.description
+                } else current.family.description
+            )
+
+            current.copy(
+                members = updatedMembers,
+                family = updatedFamily,
+                actionMessage = "Profil ${member.shortName} berhasil disimpan."
+            )
+        }
+    }
+
+    fun addFamilyMemberProfile(
+        fullName: String,
+        shortName: String,
+        dateOfBirth: String,
+        ageLabel: String,
+        gender: String,
+        relationship: RelationshipType,
+        role: UserRole,
+        email: String?,
+        phone: String?,
+        bio: String
+    ) {
+        val initials = shortName.trim().take(2).uppercase().ifBlank { "FM" }
+        val newId = "mem_${System.currentTimeMillis()}"
+        val newMember = FamilyMember(
+            id = newId,
+            familyId = _uiState.value.family?.id ?: "fam_001",
+            fullName = fullName.trim(),
+            shortName = shortName.trim().ifBlank { fullName.trim() },
+            initials = initials,
+            dateOfBirth = dateOfBirth.trim(),
+            ageLabel = ageLabel.trim(),
+            gender = gender.trim(),
+            relationship = relationship,
+            role = role,
+            email = email?.trim()?.ifBlank { null },
+            phone = phone?.trim()?.ifBlank { null },
+            hasIndependentAccount = (role != UserRole.CHILD_PROFILE),
+            bio = bio.trim(),
+            financialContributionNote = "Anggota keluarga Samawa",
+            monthlyAllowanceOrShare = "-",
+            permissions = emptyList(),
+            personalHighlights = listOf("Baru bergabung dalam keluarga Samawa")
+        )
+
+        _uiState.update { current ->
+            current.copy(
+                members = current.members + newMember,
+                selectedProfileId = newId,
+                actionMessage = "Anggota keluarga ${newMember.shortName} berhasil ditambahkan."
+            )
+        }
+    }
+
+    fun deleteFamilyMember(memberId: String) {
+        _uiState.update { current ->
+            val filtered = current.members.filterNot { it.id == memberId }
+            val nextSelected = if (current.selectedProfileId == memberId) {
+                filtered.firstOrNull()?.id ?: ""
+            } else {
+                current.selectedProfileId
+            }
+            current.copy(
+                members = filtered,
+                selectedProfileId = nextSelected,
+                actionMessage = "Anggota keluarga berhasil dihapus."
+            )
+        }
     }
 
     private fun syncChildLatestFromGrowth(

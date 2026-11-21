@@ -16,6 +16,9 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalView
 import androidx.compose.ui.unit.dp
 import androidx.core.view.WindowCompat
+import com.example.ui.i18n.AppLanguage
+import com.example.ui.i18n.LocalAppStrings
+import com.example.ui.i18n.getAppStrings
 
 enum class ThemeMode(val label: String) {
     SYSTEM("System"),
@@ -153,6 +156,7 @@ object MalakulTheme {
 @Composable
 fun MalakulJibalTheme(
     themeMode: ThemeMode = ThemeMode.SYSTEM,
+    appLanguage: AppLanguage = AppLanguage.INDONESIAN,
     content: @Composable () -> Unit
 ) {
     val isDark = when (themeMode) {
@@ -163,6 +167,7 @@ fun MalakulJibalTheme(
 
     val colorScheme = if (isDark) MalakulDarkColorScheme else MalakulLightColorScheme
     val extendedColors = if (isDark) DarkExtendedColors else LightExtendedColors
+    val appStrings = getAppStrings(appLanguage)
 
     val view = LocalView.current
     if (!view.isInEditMode) {
@@ -173,7 +178,10 @@ fun MalakulJibalTheme(
         }
     }
 
-    CompositionLocalProvider(LocalMalakulColors provides extendedColors) {
+    CompositionLocalProvider(
+        LocalMalakulColors provides extendedColors,
+        LocalAppStrings provides appStrings
+    ) {
         MaterialTheme(
             colorScheme = colorScheme,
             typography = MalakulTypography,

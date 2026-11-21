@@ -17,6 +17,8 @@ import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
+import com.example.ui.i18n.AppLanguage
+import com.example.ui.i18n.LocalAppStrings
 import com.example.ui.screens.*
 import com.example.ui.state.MainViewModel
 import com.example.ui.state.MalakulUiState
@@ -25,6 +27,7 @@ import com.example.ui.theme.MalakulTheme
 object MalakulRoutes {
     const val ROUTE_HOME = "home_dashboard"
     const val ROUTE_FAMILY = "family_profiles"
+    const val ROUTE_FAMILY_MANAGE = "family_profile_manage"
     const val ROUTE_FINANCE = "finance_preview"
     const val ROUTE_HEALTH = "health_preview"
     const val ROUTE_DOCUMENTS = "documents_preview"
@@ -69,6 +72,17 @@ fun MalakulAppShell(
     val backStackEntry by navController.currentBackStackEntryAsState()
     val currentDestination = backStackEntry?.destination
     val isPrimaryRoute = PrimaryDestinations.any { it.route == currentDestination?.route }
+    val strings = LocalAppStrings.current
+
+    val localizedDestinations = remember(strings) {
+        listOf(
+            TopLevelDestination(MalakulRoutes.ROUTE_HOME, strings.navHome, Icons.Filled.Home, Icons.Outlined.Home, "nav_home"),
+            TopLevelDestination(MalakulRoutes.ROUTE_FAMILY, strings.navFamily, Icons.Filled.Groups, Icons.Outlined.Groups, "nav_family"),
+            TopLevelDestination(MalakulRoutes.ROUTE_FINANCE, strings.navFinance, Icons.Filled.AccountBalanceWallet, Icons.Outlined.AccountBalanceWallet, "nav_finance"),
+            TopLevelDestination(MalakulRoutes.ROUTE_HEALTH, strings.navHealth, Icons.Filled.MonitorHeart, Icons.Outlined.MonitorHeart, "nav_health"),
+            TopLevelDestination(MalakulRoutes.ROUTE_DOCUMENTS, strings.navDocuments, Icons.Filled.FolderShared, Icons.Outlined.FolderShared, "nav_documents")
+        )
+    }
 
     fun navigateTopLevel(route: String) {
         navController.navigate(route) {
@@ -95,7 +109,7 @@ fun MalakulAppShell(
                         contentColor = MaterialTheme.colorScheme.onSurface
                     ) {
                         Spacer(Modifier.height(12.dp))
-                        PrimaryDestinations.forEach { dest ->
+                        localizedDestinations.forEach { dest ->
                             val selected = currentDestination?.hierarchy?.any { it.route == dest.route } == true
                             NavigationRailItem(
                                 selected = selected,
@@ -146,7 +160,7 @@ fun MalakulAppShell(
                             containerColor = MaterialTheme.colorScheme.surface,
                             tonalElevation = 2.dp
                         ) {
-                            PrimaryDestinations.forEach { dest ->
+                            localizedDestinations.forEach { dest ->
                                 val selected = currentDestination?.hierarchy?.any { it.route == dest.route } == true
                                 NavigationBarItem(
                                     selected = selected,
@@ -232,7 +246,20 @@ private fun MalakulNavContent(
                     viewModel.selectHealthMember(memberId)
                     onNavigateTopLevel(MalakulRoutes.ROUTE_HEALTH)
                 },
-                onOpenDocuments = { onNavigateTopLevel(MalakulRoutes.ROUTE_DOCUMENTS) }
+                onOpenDocuments = { onNavigateTopLevel(MalakulRoutes.ROUTE_DOCUMENTS) },
+                onOpenManageProfiles = { navController.navigate(MalakulRoutes.ROUTE_FAMILY_MANAGE) }
+            )
+        }
+        composable(MalakulRoutes.ROUTE_FAMILY_MANAGE) {
+            FamilyProfileManagementScreen(
+                state = state,
+                onSelectProfile = { viewModel.selectProfile(it) },
+                onSaveProfile = { viewModel.saveFamilyMemberProfile(it) },
+                onAddProfile = { fullName, shortName, dob, age, gender, rel, role, email, phone, bio ->
+                    viewModel.addFamilyMemberProfile(fullName, shortName, dob, age, gender, rel, role, email, phone, bio)
+                },
+                onDeleteProfile = { viewModel.deleteFamilyMember(it) },
+                onNavigateBack = { navController.popBackStack() }
             )
         }
         composable(MalakulRoutes.ROUTE_FINANCE) {
@@ -303,9 +330,11 @@ private fun MalakulNavContent(
                 onLogout = { viewModel.logout() },
                 onSwitchActiveUser = { viewModel.switchActiveUser(it) },
                 onSetThemeMode = { viewModel.setThemeMode(it) },
+                onSetAppLanguage = { viewModel.setAppLanguage(it) },
                 onUpdateApiBaseUrl = { viewModel.updateApiBaseUrl(it) },
                 onOpenAuthScreen = { viewModel.openAuthScreen() },
-                onNavigateBack = { navController.popBackStack() }
+                onNavigateBack = { navController.popBackStack() },
+                onOpenManageProfiles = { navController.navigate(MalakulRoutes.ROUTE_FAMILY_MANAGE) }
             )
         }
     }

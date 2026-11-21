@@ -1,0 +1,18 @@
+<resources>
+    <string name="app_name">Samawa</string>
+    <string name="brand_title">SAMAWA</string>
+    <string name="brand_tagline">Our Family. Our Health. Our Legacy.</string>
+    <string name="nav_home">Home</string>
+    <string name="nav_family">Family</string>
+    <string name="nav_finance">Finance</string>
+    <string name="nav_health">Health</string>
+    <string name="nav_documents">Vault</string>
+    <string name="nav_profile">Profile</string>
+    <string name="nav_calendar">Calendar</string>
+    <string name="nav_child_dev">Child Dev</string>
+    <string name="demo_mode_badge">FAMILY MODE · ACTIVE</string>
+    <string name="demo_mode_subtitle">Integrated family app — connected to api.malakuljibal.com server.</string>
+    <string name="medical_disclaimer">Health and child growth records are strictly for private family record keeping, not a replacement for clinical medical diagnosis or advice.</string>
+    <string name="privacy_restricted_title">Restricted / Private Records</string>
+    <string name="privacy_restricted_body">This section is confidential and only accessible by the record owner or family members with explicit permission.</string>
+</resources>

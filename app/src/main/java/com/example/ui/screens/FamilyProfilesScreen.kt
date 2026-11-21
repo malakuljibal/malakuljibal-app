@@ -28,6 +28,7 @@ fun FamilyProfilesScreen(
     onOpenChildDevelopment: (String) -> Unit,
     onOpenMemberHealth: (String) -> Unit,
     onOpenDocuments: () -> Unit,
+    onOpenManageProfiles: () -> Unit = {},
     modifier: Modifier = Modifier
 ) {
     val activeUser = state.activeUser
@@ -50,22 +51,43 @@ fun FamilyProfilesScreen(
         verticalArrangement = Arrangement.spacedBy(16.dp)
     ) {
         item {
-            Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
-                Text(
-                    text = "PERSONAL FAMILY PROFILES",
-                    style = MaterialTheme.typography.labelSmall,
-                    color = MalakulTheme.colors.gold
-                )
-                Text(
-                    text = state.family.name,
-                    style = MaterialTheme.typography.headlineLarge,
-                    color = MaterialTheme.colorScheme.onBackground
-                )
-                Text(
-                    text = "Select any household member to inspect personal information, authorized records, and privacy boundaries.",
-                    style = MaterialTheme.typography.bodySmall,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant
-                )
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Column(modifier = Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(4.dp)) {
+                    Text(
+                        text = "PERSONAL FAMILY PROFILES",
+                        style = MaterialTheme.typography.labelSmall,
+                        color = MalakulTheme.colors.gold
+                    )
+                    Text(
+                        text = state.family.name,
+                        style = MaterialTheme.typography.headlineLarge,
+                        color = MaterialTheme.colorScheme.onBackground
+                    )
+                    Text(
+                        text = "Select any household member to inspect personal information, authorized records, and privacy boundaries.",
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+                }
+                FilledTonalButton(
+                    onClick = onOpenManageProfiles,
+                    colors = ButtonDefaults.filledTonalButtonColors(
+                        containerColor = MaterialTheme.colorScheme.primaryContainer,
+                        contentColor = MaterialTheme.colorScheme.onPrimaryContainer
+                    )
+                ) {
+                    Icon(
+                        imageVector = Icons.Default.Edit,
+                        contentDescription = "Kelola Profil",
+                        modifier = Modifier.size(18.dp)
+                    )
+                    Spacer(Modifier.width(6.dp))
+                    Text(text = "Atur Profil", style = MaterialTheme.typography.labelMedium)
+                }
             }
         }
 
@@ -122,6 +144,16 @@ fun FamilyProfilesScreen(
                             style = MaterialTheme.typography.bodyMedium,
                             color = MaterialTheme.colorScheme.onSurfaceVariant
                         )
+                        Spacer(Modifier.height(8.dp))
+                        OutlinedButton(
+                            onClick = onOpenManageProfiles,
+                            modifier = Modifier.height(34.dp),
+                            contentPadding = PaddingValues(horizontal = 12.dp, vertical = 4.dp)
+                        ) {
+                            Icon(Icons.Default.Edit, contentDescription = null, modifier = Modifier.size(14.dp))
+                            Spacer(Modifier.width(4.dp))
+                            Text("Edit Profil", style = MaterialTheme.typography.labelSmall)
+                        }
                     }
                 }
                 Spacer(Modifier.height(14.dp))

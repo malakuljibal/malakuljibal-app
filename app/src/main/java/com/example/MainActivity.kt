@@ -19,7 +19,10 @@ class MainActivity : ComponentActivity() {
             val viewModel: MainViewModel = viewModel()
             val uiState by viewModel.uiState.collectAsStateWithLifecycle()
 
-            MalakulJibalTheme(themeMode = uiState.themeMode) {
+            MalakulJibalTheme(
+                themeMode = uiState.themeMode,
+                appLanguage = uiState.appLanguage
+            ) {
                 MalakulAppShell(
                     state = uiState,
                     viewModel = viewModel
