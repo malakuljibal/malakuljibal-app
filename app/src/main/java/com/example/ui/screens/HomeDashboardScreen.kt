@@ -92,6 +92,168 @@ fun HomeDashboardScreen(
             }
         }
 
+        // 2b. Quick Action Hub (Aksi Cepat Keluarga)
+        item {
+            Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                Text(
+                    text = "Aksi Cepat Hari Ini",
+                    style = MaterialTheme.typography.titleMedium,
+                    fontWeight = FontWeight.Bold,
+                    color = MaterialTheme.colorScheme.onBackground
+                )
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.spacedBy(10.dp)
+                ) {
+                    QuickActionTile(
+                        icon = Icons.Outlined.AccountBalanceWallet,
+                        title = "Catat Kas",
+                        subtitle = "Pengeluaran",
+                        containerColor = MalakulTheme.colors.goldContainer.copy(alpha = 0.5f),
+                        contentColor = MalakulTheme.colors.onGoldContainer,
+                        modifier = Modifier.weight(1f),
+                        onClick = onNavigateToFinance
+                    )
+                    QuickActionTile(
+                        icon = Icons.Outlined.CalendarMonth,
+                        title = "Jadwal Baru",
+                        subtitle = "Agenda",
+                        containerColor = MalakulTheme.colors.navyHero.copy(alpha = 0.15f),
+                        contentColor = MaterialTheme.colorScheme.primary,
+                        modifier = Modifier.weight(1f),
+                        onClick = onNavigateToCalendar
+                    )
+                }
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.spacedBy(10.dp)
+                ) {
+                    QuickActionTile(
+                        icon = Icons.Outlined.ChildCare,
+                        title = "Tumbuh Kembang",
+                        subtitle = "Ukur BB/TB",
+                        containerColor = MalakulTheme.colors.healthContainer.copy(alpha = 0.5f),
+                        contentColor = MalakulTheme.colors.healthAccent,
+                        modifier = Modifier.weight(1f),
+                        onClick = onNavigateToChildDev
+                    )
+                    QuickActionTile(
+                        icon = Icons.Outlined.FolderShared,
+                        title = "Arsip Berkas",
+                        subtitle = "Dokumen",
+                        containerColor = MaterialTheme.colorScheme.surfaceVariant,
+                        contentColor = MaterialTheme.colorScheme.onSurfaceVariant,
+                        modifier = Modifier.weight(1f),
+                        onClick = onNavigateToDocuments
+                    )
+                }
+            }
+        }
+
+        // 2c. Agenda & Safe-to-Spend Alert Card
+        item {
+            val fin = state.financialSummary
+            val nextEvent = state.visibleEvents.firstOrNull()
+            MalakulCard(
+                modifier = Modifier.fillMaxWidth().testTag("home_today_agenda_card"),
+                contentPadding = PaddingValues(16.dp)
+            ) {
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Row(
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.spacedBy(8.dp)
+                    ) {
+                        Icon(
+                            imageVector = Icons.Outlined.NotificationsActive,
+                            contentDescription = null,
+                            tint = MalakulTheme.colors.gold,
+                            modifier = Modifier.size(20.dp)
+                        )
+                        Text(
+                            text = "Pengingat & Agenda Terdekat",
+                            style = MaterialTheme.typography.titleMedium,
+                            fontWeight = FontWeight.Bold
+                        )
+                    }
+                    if (fin.monthlyBudgetLimit > 0L) {
+                        Surface(
+                            shape = RoundedCornerShape(999.dp),
+                            color = if (fin.isBudgetExceeded) MalakulTheme.colors.danger.copy(alpha = 0.15f)
+                            else if (fin.isBudgetWarning) MalakulTheme.colors.warning.copy(alpha = 0.2f)
+                            else MalakulTheme.colors.goldContainer
+                        ) {
+                            Text(
+                                text = "Aman: ${formatCurrency(fin.safeToSpend, fin.currencySymbol)}",
+                                modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp),
+                                style = MaterialTheme.typography.labelSmall,
+                                color = if (fin.isBudgetExceeded) MalakulTheme.colors.danger
+                                else if (fin.isBudgetWarning) MalakulTheme.colors.warning
+                                else MalakulTheme.colors.onGoldContainer
+                            )
+                        }
+                    }
+                }
+                Spacer(Modifier.height(10.dp))
+                if (nextEvent != null) {
+                    Row(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .clip(RoundedCornerShape(10.dp))
+                            .background(MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f))
+                            .clickable { onNavigateToCalendar() }
+                            .padding(12.dp),
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.spacedBy(10.dp)
+                    ) {
+                        Surface(
+                            shape = RoundedCornerShape(8.dp),
+                            color = MalakulTheme.colors.navyHero,
+                            modifier = Modifier.size(42.dp)
+                        ) {
+                            Box(contentAlignment = Alignment.Center) {
+                                Text(
+                                    text = nextEvent.dateLabel.take(6),
+                                    style = MaterialTheme.typography.labelSmall,
+                                    color = MalakulTheme.colors.gold,
+                                    fontWeight = FontWeight.Bold
+                                )
+                            }
+                        }
+                        Column(modifier = Modifier.weight(1f)) {
+                            Text(
+                                text = nextEvent.title,
+                                style = MaterialTheme.typography.bodyMedium,
+                                fontWeight = FontWeight.SemiBold,
+                                maxLines = 1,
+                                overflow = TextOverflow.Ellipsis
+                            )
+                            Text(
+                                text = "${nextEvent.timeLabel} · ${nextEvent.locationOrNote}",
+                                style = MaterialTheme.typography.labelSmall,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant
+                            )
+                        }
+                        Icon(
+                            Icons.Rounded.ChevronRight,
+                            contentDescription = null,
+                            tint = MaterialTheme.colorScheme.onSurfaceVariant,
+                            modifier = Modifier.size(18.dp)
+                        )
+                    }
+                } else {
+                    Text(
+                        text = "Belum ada agenda keluarga hari ini. Klik 'Jadwal Baru' di atas untuk menambah pengingat.",
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+                }
+            }
+        }
+
         // 3. Family Overview & Quick Member Selector
         item {
             Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
@@ -678,5 +840,60 @@ private fun ModuleIconCircle(
             tint = tint,
             modifier = Modifier.size(20.dp)
         )
+    }
+}
+
+@Composable
+private fun QuickActionTile(
+    icon: ImageVector,
+    title: String,
+    subtitle: String,
+    containerColor: Color,
+    contentColor: Color,
+    onClick: () -> Unit,
+    modifier: Modifier = Modifier
+) {
+    Surface(
+        onClick = onClick,
+        modifier = modifier.height(64.dp),
+        shape = RoundedCornerShape(12.dp),
+        color = containerColor,
+        border = BorderStroke(1.dp, contentColor.copy(alpha = 0.2f))
+    ) {
+        Row(
+            modifier = Modifier.padding(horizontal = 12.dp, vertical = 8.dp),
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.spacedBy(10.dp)
+        ) {
+            Box(
+                modifier = Modifier
+                    .size(34.dp)
+                    .clip(CircleShape)
+                    .background(contentColor.copy(alpha = 0.15f)),
+                contentAlignment = Alignment.Center
+            ) {
+                Icon(
+                    imageVector = icon,
+                    contentDescription = null,
+                    tint = contentColor,
+                    modifier = Modifier.size(18.dp)
+                )
+            }
+            Column(modifier = Modifier.weight(1f)) {
+                Text(
+                    text = title,
+                    style = MaterialTheme.typography.labelLarge,
+                    fontWeight = FontWeight.Bold,
+                    color = MaterialTheme.colorScheme.onSurface,
+                    maxLines = 1
+                )
+                Text(
+                    text = subtitle,
+                    style = MaterialTheme.typography.labelSmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    maxLines = 1
+                )
+            }
+        }
     }
 }

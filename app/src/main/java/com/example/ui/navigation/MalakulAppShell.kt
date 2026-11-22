@@ -320,6 +320,9 @@ private fun MalakulNavContent(
             CalendarScreen(
                 state = state,
                 onSelectCategory = { viewModel.selectCalendarCategory(it) },
+                onAddEvent = { title, cat, date, time, loc, scope ->
+                    viewModel.addFamilyEvent(title, cat, date, time, loc, scope)
+                },
                 onNavigateBack = { navController.popBackStack() }
             )
         }

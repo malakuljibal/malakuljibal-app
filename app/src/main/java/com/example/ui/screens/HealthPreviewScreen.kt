@@ -87,8 +87,8 @@ fun HealthPreviewScreen(
                         color = MaterialTheme.colorScheme.onBackground
                     )
                 }
-                if (state.isLiveMode) {
-                    Row(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
+                Row(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
+                    if (state.isLiveMode) {
                         IconButton(
                             onClick = onRefresh,
                             modifier = Modifier
@@ -97,17 +97,17 @@ fun HealthPreviewScreen(
                         ) {
                             Icon(Icons.Rounded.Refresh, contentDescription = "Refresh health records")
                         }
-                        FilledTonalButton(
-                            onClick = { showAddDialog = true },
-                            enabled = !state.isSubmitting,
-                            modifier = Modifier
-                                .testTag("health_add_btn")
-                                .defaultMinSize(minHeight = 48.dp)
-                        ) {
-                            Icon(Icons.Rounded.Add, contentDescription = null, modifier = Modifier.size(18.dp))
-                            Spacer(Modifier.width(4.dp))
-                            Text("Record")
-                        }
+                    }
+                    FilledTonalButton(
+                        onClick = { showAddDialog = true },
+                        enabled = !state.isSubmitting,
+                        modifier = Modifier
+                            .testTag("health_add_btn")
+                            .defaultMinSize(minHeight = 48.dp)
+                    ) {
+                        Icon(Icons.Rounded.Add, contentDescription = null, modifier = Modifier.size(18.dp))
+                        Spacer(Modifier.width(4.dp))
+                        Text("Catat Medis")
                     }
                 }
             }
@@ -336,41 +336,45 @@ private fun AddHealthRecordDialog(
 
     AlertDialog(
         onDismissRequest = onDismiss,
-        title = { Text("Add Health Record") },
+        title = { Text("Catat Kunjungan & Rekam Medis", fontWeight = FontWeight.Bold) },
         text = {
             Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
                 OutlinedTextField(
                     value = diagnosis,
                     onValueChange = { diagnosis = it; error = null },
-                    label = { Text("Diagnosis / Visit Title") },
+                    label = { Text("Diagnosis / Keluhan / Tujuan") },
+                    placeholder = { Text("contoh: Pemeriksaan Rutin / Demam Anak") },
                     singleLine = true,
                     modifier = Modifier.fillMaxWidth().testTag("health_diagnosis_input")
                 )
                 OutlinedTextField(
                     value = hospitalName,
                     onValueChange = { hospitalName = it; error = null },
-                    label = { Text("Hospital / Clinic") },
+                    label = { Text("Rumah Sakit / Klinik / Puskesmas") },
+                    placeholder = { Text("contoh: RSIA Bunda / Puskesmas") },
                     singleLine = true,
                     modifier = Modifier.fillMaxWidth().testTag("health_hospital_input")
                 )
                 OutlinedTextField(
                     value = doctorName,
                     onValueChange = { doctorName = it; error = null },
-                    label = { Text("Doctor Name") },
+                    label = { Text("Nama Dokter / Tenaga Medis") },
+                    placeholder = { Text("contoh: dr. Ahmad, Sp.A") },
                     singleLine = true,
                     modifier = Modifier.fillMaxWidth().testTag("health_doctor_input")
                 )
                 OutlinedTextField(
                     value = recordDate,
                     onValueChange = { recordDate = it; error = null },
-                    label = { Text("Record Date (YYYY-MM-DD)") },
+                    label = { Text("Tanggal Periksa (YYYY-MM-DD)") },
                     singleLine = true,
                     modifier = Modifier.fillMaxWidth().testTag("health_date_input")
                 )
                 OutlinedTextField(
                     value = notes,
                     onValueChange = { notes = it },
-                    label = { Text("Notes / Recommendations") },
+                    label = { Text("Resep Obat & Anjuran Dokter") },
+                    placeholder = { Text("contoh: Paracetamol 3x1 cth sesudah makan") },
                     minLines = 2,
                     modifier = Modifier.fillMaxWidth().testTag("health_notes_input")
                 )
@@ -384,18 +388,18 @@ private fun AddHealthRecordDialog(
                 enabled = !isSubmitting,
                 onClick = {
                     if (diagnosis.isBlank() || hospitalName.isBlank() || doctorName.isBlank() || recordDate.isBlank()) {
-                        error = "Please complete diagnosis, hospital, doctor, and date."
+                        error = "Harap lengkapi diagnosis, rumah sakit, dokter, dan tanggal."
                     } else {
                         onSubmit(diagnosis.trim(), hospitalName.trim(), doctorName.trim(), notes.trim(), recordDate.trim())
                     }
                 },
                 modifier = Modifier.testTag("health_submit_btn")
             ) {
-                Text("Save")
+                Text("Simpan Rekam Medis")
             }
         },
         dismissButton = {
-            TextButton(onClick = onDismiss) { Text("Cancel") }
+            TextButton(onClick = onDismiss) { Text("Batal") }
         }
     )
 }

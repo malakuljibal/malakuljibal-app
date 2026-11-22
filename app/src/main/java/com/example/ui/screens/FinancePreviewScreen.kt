@@ -80,40 +80,42 @@ fun FinancePreviewScreen(
         )
     }
 
-    LazyColumn(
-        modifier = modifier
-            .fillMaxSize()
-            .testTag("finance_preview_list"),
-        contentPadding = PaddingValues(start = 16.dp, end = 16.dp, top = 12.dp, bottom = 28.dp),
-        verticalArrangement = Arrangement.spacedBy(16.dp)
-    ) {
-        item {
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.SpaceBetween,
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                Column(modifier = Modifier.weight(1f)) {
-                    Text(
-                        text = if (state.isLiveMode) "MODUL KEUANGAN · AKTIF" else "MODUL KEUANGAN · KELUARGA SAMAWA",
-                        style = MaterialTheme.typography.labelSmall,
-                        color = MalakulTheme.colors.gold
-                    )
-                    Text(
-                        text = "Keuangan Keluarga",
-                        style = MaterialTheme.typography.headlineLarge,
-                        color = MaterialTheme.colorScheme.onBackground
-                    )
-                }
-                Row(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
-                    if (state.isLiveMode) {
-                        IconButton(
-                            onClick = onRefresh,
-                            modifier = Modifier
-                                .testTag("finance_refresh_btn")
-                                .size(48.dp)
-                        ) {
-                            Icon(Icons.Rounded.Refresh, contentDescription = "Refresh finances")
+    Box(modifier = modifier.fillMaxSize()) {
+        LazyColumn(
+            modifier = Modifier
+                .fillMaxSize()
+                .testTag("finance_preview_list"),
+            contentPadding = PaddingValues(start = 16.dp, end = 16.dp, top = 12.dp, bottom = 80.dp),
+            verticalArrangement = Arrangement.spacedBy(16.dp)
+        ) {
+            item {
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Column(modifier = Modifier.weight(1f)) {
+                        Text(
+                            text = if (state.isLiveMode) "MODUL KEUANGAN · AKTIF" else "MODUL KEUANGAN · KELUARGA SAMAWA",
+                            style = MaterialTheme.typography.labelSmall,
+                            color = MalakulTheme.colors.gold
+                        )
+                        Text(
+                            text = "Keuangan Keluarga",
+                            style = MaterialTheme.typography.headlineLarge,
+                            color = MaterialTheme.colorScheme.onBackground
+                        )
+                    }
+                    Row(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
+                        if (state.isLiveMode) {
+                            IconButton(
+                                onClick = onRefresh,
+                                modifier = Modifier
+                                    .testTag("finance_refresh_btn")
+                                    .size(48.dp)
+                            ) {
+                                Icon(Icons.Rounded.Refresh, contentDescription = "Refresh finances")
+                            }
                         }
                         FilledTonalButton(
                             onClick = { showAddDialog = true },
@@ -124,12 +126,11 @@ fun FinancePreviewScreen(
                         ) {
                             Icon(Icons.Rounded.Add, contentDescription = null, modifier = Modifier.size(18.dp))
                             Spacer(Modifier.width(4.dp))
-                            Text("Add")
+                            Text("Catat")
                         }
                     }
                 }
             }
-        }
 
         if (state.isLoadingFinance || state.isSubmitting) {
             item {
@@ -448,6 +449,25 @@ fun FinancePreviewScreen(
             }
         }
     }
+
+    FloatingActionButton(
+        onClick = { showAddDialog = true },
+        containerColor = MalakulTheme.colors.gold,
+        contentColor = MalakulTheme.colors.navyHero,
+        modifier = Modifier
+            .align(Alignment.BottomEnd)
+            .padding(20.dp)
+            .testTag("finance_fab_quick_add")
+    ) {
+        Row(
+            modifier = Modifier.padding(horizontal = 14.dp),
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.spacedBy(6.dp)
+        ) {
+            Icon(Icons.Rounded.Add, contentDescription = "Catat Transaksi")
+            Text("Catat Kas", fontWeight = FontWeight.Bold)
+        }
+    }
 }
 
 @Composable
@@ -463,42 +483,72 @@ private fun AddTransactionDialog(
     var dateText by remember { mutableStateOf(todayIso) }
     var validationError by remember { mutableStateOf<String?>(null) }
 
+    val expensePresets = listOf("Makan & Minum", "Belanja Harian", "Listrik & Utilitas", "Pendidikan Anak", "Kesehatan & Obat", "Transportasi", "Sedekah & Infaq", "Lain-lain")
+    val incomePresets = listOf("Gaji Bulanan", "Tunjangan / THR", "Usaha & Dagang", "Transfer Keluarga", "Lain-lain")
+
     AlertDialog(
         onDismissRequest = onDismiss,
-        title = { Text("Record Transaction") },
+        title = {
+            Text(
+                text = if (selectedType == "expense") "Catat Pengeluaran Keluarga" else "Catat Pemasukan Keluarga",
+                fontWeight = FontWeight.Bold
+            )
+        },
         text = {
             Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
                 Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                     FilterChip(
                         selected = selectedType == "expense",
                         onClick = { selectedType = "expense" },
-                        label = { Text("Expense") }
+                        label = { Text("Pengeluaran") }
                     )
                     FilterChip(
                         selected = selectedType == "income",
                         onClick = { selectedType = "income" },
-                        label = { Text("Income") }
+                        label = { Text("Pemasukan") }
                     )
                 }
+
+                Text(
+                    text = "Pilih Cepat Kategori:",
+                    style = MaterialTheme.typography.labelSmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                )
+                LazyRow(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
+                    val presets = if (selectedType == "expense") expensePresets else incomePresets
+                    items(presets) { preset ->
+                        SuggestionChip(
+                            onClick = {
+                                description = if (description.isBlank()) preset else "$preset - $description"
+                                validationError = null
+                            },
+                            label = { Text(preset, style = MaterialTheme.typography.labelSmall) }
+                        )
+                    }
+                }
+
                 OutlinedTextField(
                     value = amountText,
                     onValueChange = { amountText = it; validationError = null },
-                    label = { Text("Amount") },
-                    keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal),
+                    label = { Text("Nominal (Rp)") },
+                    prefix = { Text("Rp ") },
+                    placeholder = { Text("50.000") },
+                    keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
                     singleLine = true,
                     modifier = Modifier.fillMaxWidth().testTag("tx_amount_input")
                 )
                 OutlinedTextField(
                     value = description,
                     onValueChange = { description = it; validationError = null },
-                    label = { Text("Description") },
+                    label = { Text("Keterangan") },
+                    placeholder = { Text("contoh: Belanja sayur di pasar") },
                     singleLine = true,
                     modifier = Modifier.fillMaxWidth().testTag("tx_desc_input")
                 )
                 OutlinedTextField(
                     value = dateText,
                     onValueChange = { dateText = it; validationError = null },
-                    label = { Text("Transaction Date (YYYY-MM-DD)") },
+                    label = { Text("Tanggal Transaksi (YYYY-MM-DD)") },
                     singleLine = true,
                     modifier = Modifier.fillMaxWidth().testTag("tx_date_input")
                 )
@@ -511,24 +561,25 @@ private fun AddTransactionDialog(
             Button(
                 enabled = !isSubmitting,
                 onClick = {
-                    val amount = amountText.trim().toDoubleOrNull()
+                    val cleanedAmount = amountText.trim().replace(".", "").replace(",", ".")
+                    val amount = cleanedAmount.toDoubleOrNull()
                     if (amount == null || amount <= 0.0) {
-                        validationError = "Please enter a valid positive amount."
+                        validationError = "Masukkan nominal transaksi yang valid."
                     } else if (description.isBlank()) {
-                        validationError = "Please enter a description."
+                        validationError = "Masukkan keterangan transaksi."
                     } else if (dateText.isBlank()) {
-                        validationError = "Please enter a date (YYYY-MM-DD)."
+                        validationError = "Masukkan tanggal transaksi (YYYY-MM-DD)."
                     } else {
                         onSubmit(selectedType, amount, description.trim(), dateText.trim())
                     }
                 },
                 modifier = Modifier.testTag("tx_submit_btn")
             ) {
-                Text("Save")
+                Text("Simpan Transaksi")
             }
         },
         dismissButton = {
-            TextButton(onClick = onDismiss) { Text("Cancel") }
+            TextButton(onClick = onDismiss) { Text("Batal") }
         }
     )
 }

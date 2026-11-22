@@ -119,8 +119,8 @@ fun DocumentsPreviewScreen(
                         color = MaterialTheme.colorScheme.onBackground
                     )
                 }
-                if (state.isLiveMode) {
-                    Row(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
+                Row(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
+                    if (state.isLiveMode) {
                         IconButton(
                             onClick = onRefresh,
                             modifier = Modifier
@@ -129,17 +129,17 @@ fun DocumentsPreviewScreen(
                         ) {
                             Icon(Icons.Rounded.Refresh, contentDescription = "Refresh documents")
                         }
-                        FilledTonalButton(
-                            onClick = { showAddDialog = true },
-                            enabled = !state.isSubmitting,
-                            modifier = Modifier
-                                .testTag("vault_add_btn")
-                                .defaultMinSize(minHeight = 48.dp)
-                        ) {
-                            Icon(Icons.Rounded.Add, contentDescription = null, modifier = Modifier.size(18.dp))
-                            Spacer(Modifier.width(4.dp))
-                            Text("Add")
-                        }
+                    }
+                    FilledTonalButton(
+                        onClick = { showAddDialog = true },
+                        enabled = !state.isSubmitting,
+                        modifier = Modifier
+                            .testTag("vault_add_btn")
+                            .defaultMinSize(minHeight = 48.dp)
+                    ) {
+                        Icon(Icons.Rounded.Add, contentDescription = null, modifier = Modifier.size(18.dp))
+                        Spacer(Modifier.width(4.dp))
+                        Text("Tambah")
                     }
                 }
             }
@@ -366,45 +366,58 @@ private fun AddDocumentDialog(
 ) {
     val todayIso = remember { SimpleDateFormat("yyyy-MM-dd", Locale.US).format(Date()) }
     var title by remember { mutableStateOf("") }
-    var category by remember { mutableStateOf("Identity") }
+    var category by remember { mutableStateOf("IDENTITY") }
     var documentDate by remember { mutableStateOf(todayIso) }
     var notes by remember { mutableStateOf("") }
     var error by remember { mutableStateOf<String?>(null) }
 
-    val quickCategories = listOf("Identity", "Passport", "Birth Certificate", "Insurance", "Property", "Medical", "Other")
+    val quickCategories = listOf(
+        "IDENTITY" to "KTP / Identitas",
+        "BIRTH_CERT" to "Akta Kelahiran",
+        "MARRIAGE_CERT" to "Buku Nikah",
+        "PASSPORT" to "Paspor",
+        "INSURANCE" to "BPJS / Asuransi",
+        "EDUCATION" to "Ijazah",
+        "PROPERTY" to "Sertifikat",
+        "VEHICLE" to "STNK / BPKB",
+        "OTHER" to "Lainnya"
+    )
 
     AlertDialog(
         onDismissRequest = onDismiss,
-        title = { Text("Add Family Document") },
+        title = { Text("Tambah Arsip Dokumen Keluarga", fontWeight = FontWeight.Bold) },
         text = {
             Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
                 OutlinedTextField(
                     value = title,
                     onValueChange = { title = it; error = null },
-                    label = { Text("Document Title") },
+                    label = { Text("Nama Dokumen") },
+                    placeholder = { Text("contoh: Kartu Keluarga 2026 / KTP Ayah") },
                     singleLine = true,
                     modifier = Modifier.fillMaxWidth().testTag("doc_title_input")
                 )
+                Text("Kategori Dokumen:", style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
                 LazyRow(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
-                    items(quickCategories) { cat ->
+                    items(quickCategories) { (key, label) ->
                         FilterChip(
-                            selected = category == cat,
-                            onClick = { category = cat },
-                            label = { Text(cat) }
+                            selected = category == key,
+                            onClick = { category = key },
+                            label = { Text(label, style = MaterialTheme.typography.labelSmall) }
                         )
                     }
                 }
                 OutlinedTextField(
                     value = documentDate,
                     onValueChange = { documentDate = it; error = null },
-                    label = { Text("Document Date (YYYY-MM-DD)") },
+                    label = { Text("Tanggal Terbit (YYYY-MM-DD)") },
                     singleLine = true,
                     modifier = Modifier.fillMaxWidth().testTag("doc_date_input")
                 )
                 OutlinedTextField(
                     value = notes,
                     onValueChange = { notes = it },
-                    label = { Text("Notes / Metadata") },
+                    label = { Text("Nomor Dokumen / Catatan Penting") },
+                    placeholder = { Text("contoh: No. NIK: 3201... / Berlaku seumur hidup") },
                     minLines = 2,
                     modifier = Modifier.fillMaxWidth().testTag("doc_notes_input")
                 )
@@ -418,18 +431,18 @@ private fun AddDocumentDialog(
                 enabled = !isSubmitting,
                 onClick = {
                     if (title.isBlank() || documentDate.isBlank()) {
-                        error = "Please enter a title and document date."
+                        error = "Masukkan nama dan tanggal dokumen."
                     } else {
                         onSubmit(title.trim(), category.trim(), documentDate.trim(), notes.trim())
                     }
                 },
                 modifier = Modifier.testTag("doc_submit_btn")
             ) {
-                Text("Save")
+                Text("Simpan Dokumen")
             }
         },
         dismissButton = {
-            TextButton(onClick = onDismiss) { Text("Cancel") }
+            TextButton(onClick = onDismiss) { Text("Batal") }
         }
     )
 }

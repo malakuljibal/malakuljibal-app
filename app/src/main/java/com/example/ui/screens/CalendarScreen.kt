@@ -9,7 +9,12 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.rounded.ArrowBack
 import androidx.compose.material.icons.outlined.*
 import androidx.compose.material3.*
+import androidx.compose.material.icons.rounded.Add
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.testTag
@@ -28,8 +33,21 @@ fun CalendarScreen(
     state: MalakulUiState,
     onSelectCategory: (EventCategory?) -> Unit,
     onNavigateBack: () -> Unit,
+    onAddEvent: (title: String, category: EventCategory, dateLabel: String, timeLabel: String, locationOrNote: String, assignedScope: String) -> Unit = { _, _, _, _, _, _ -> },
     modifier: Modifier = Modifier
 ) {
+    var showAddEventDialog by remember { mutableStateOf(false) }
+
+    if (showAddEventDialog) {
+        AddEventDialog(
+            onDismiss = { showAddEventDialog = false },
+            onSubmit = { title, cat, date, time, loc, scope ->
+                onAddEvent(title, cat, date, time, loc, scope)
+                showAddEventDialog = false
+            }
+        )
+    }
+
     Scaffold(
         modifier = modifier.fillMaxSize(),
         containerColor = MaterialTheme.colorScheme.background,
@@ -51,8 +69,35 @@ fun CalendarScreen(
                         Icon(Icons.AutoMirrored.Rounded.ArrowBack, contentDescription = "Back")
                     }
                 },
+                actions = {
+                    FilledTonalButton(
+                        onClick = { showAddEventDialog = true },
+                        modifier = Modifier.padding(end = 8.dp).testTag("calendar_add_event_btn")
+                    ) {
+                        Icon(Icons.Rounded.Add, contentDescription = null, modifier = Modifier.size(18.dp))
+                        Spacer(Modifier.width(4.dp))
+                        Text("Tambah")
+                    }
+                },
                 colors = TopAppBarDefaults.topAppBarColors(containerColor = MaterialTheme.colorScheme.background)
             )
+        },
+        floatingActionButton = {
+            FloatingActionButton(
+                onClick = { showAddEventDialog = true },
+                containerColor = MalakulTheme.colors.gold,
+                contentColor = MalakulTheme.colors.navyHero,
+                modifier = Modifier.testTag("calendar_fab_add")
+            ) {
+                Row(
+                    modifier = Modifier.padding(horizontal = 14.dp),
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.spacedBy(6.dp)
+                ) {
+                    Icon(Icons.Rounded.Add, contentDescription = "Tambah Jadwal")
+                    Text("Jadwal Baru", fontWeight = FontWeight.Bold)
+                }
+            }
         }
     ) { innerPadding ->
         LazyColumn(
@@ -60,7 +105,7 @@ fun CalendarScreen(
                 .fillMaxSize()
                 .padding(innerPadding)
                 .testTag("calendar_events_list"),
-            contentPadding = PaddingValues(start = 16.dp, end = 16.dp, top = 8.dp, bottom = 28.dp),
+            contentPadding = PaddingValues(start = 16.dp, end = 16.dp, top = 8.dp, bottom = 80.dp),
             verticalArrangement = Arrangement.spacedBy(12.dp)
         ) {
             item {
@@ -145,4 +190,113 @@ fun CalendarScreen(
             }
         }
     }
+}
+
+@Composable
+private fun AddEventDialog(
+    onDismiss: () -> Unit,
+    onSubmit: (title: String, category: EventCategory, dateLabel: String, timeLabel: String, locationOrNote: String, assignedScope: String) -> Unit
+) {
+    var title by remember { mutableStateOf("") }
+    var selectedCategory by remember { mutableStateOf(EventCategory.FAMILY) }
+    var dateLabel by remember { mutableStateOf("25 Nov") }
+    var timeLabel by remember { mutableStateOf("10:00 WIB") }
+    var locationOrNote by remember { mutableStateOf("") }
+    var assignedScope by remember { mutableStateOf("Seluruh Keluarga") }
+    var error by remember { mutableStateOf<String?>(null) }
+
+    AlertDialog(
+        onDismissRequest = onDismiss,
+        title = { Text("Tambah Agenda & Pengingat Keluarga", fontWeight = FontWeight.Bold) },
+        text = {
+            Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
+                OutlinedTextField(
+                    value = title,
+                    onValueChange = { title = it; error = null },
+                    label = { Text("Nama Kegiatan / Pengingat") },
+                    placeholder = { Text("contoh: Les Musik Ahmad / Bayar Listrik") },
+                    singleLine = true,
+                    modifier = Modifier.fillMaxWidth().testTag("event_title_input")
+                )
+
+                Text("Kategori:", style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                LazyRow(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
+                    items(EventCategory.entries) { cat ->
+                        FilterChip(
+                            selected = selectedCategory == cat,
+                            onClick = { selectedCategory = cat },
+                            label = { Text(cat.label, style = MaterialTheme.typography.labelSmall) }
+                        )
+                    }
+                }
+
+                Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                    OutlinedTextField(
+                        value = dateLabel,
+                        onValueChange = { dateLabel = it; error = null },
+                        label = { Text("Tanggal") },
+                        placeholder = { Text("25 Nov") },
+                        singleLine = true,
+                        modifier = Modifier.weight(1f).testTag("event_date_input")
+                    )
+                    OutlinedTextField(
+                        value = timeLabel,
+                        onValueChange = { timeLabel = it; error = null },
+                        label = { Text("Waktu") },
+                        placeholder = { Text("15:00 WIB") },
+                        singleLine = true,
+                        modifier = Modifier.weight(1f).testTag("event_time_input")
+                    )
+                }
+
+                OutlinedTextField(
+                    value = locationOrNote,
+                    onValueChange = { locationOrNote = it },
+                    label = { Text("Lokasi / Catatan") },
+                    placeholder = { Text("contoh: RS Bunda / Rumah") },
+                    singleLine = true,
+                    modifier = Modifier.fillMaxWidth().testTag("event_note_input")
+                )
+
+                OutlinedTextField(
+                    value = assignedScope,
+                    onValueChange = { assignedScope = it },
+                    label = { Text("Peserta / Yang Terlibat") },
+                    placeholder = { Text("Seluruh Keluarga / Ahmad") },
+                    singleLine = true,
+                    modifier = Modifier.fillMaxWidth().testTag("event_scope_input")
+                )
+
+                if (error != null) {
+                    Text(error!!, style = MaterialTheme.typography.bodySmall, color = MalakulTheme.colors.danger)
+                }
+            }
+        },
+        confirmButton = {
+            Button(
+                onClick = {
+                    if (title.isBlank()) {
+                        error = "Masukkan nama kegiatan."
+                    } else if (dateLabel.isBlank()) {
+                        error = "Masukkan tanggal kegiatan."
+                    } else {
+                        onSubmit(
+                            title.trim(),
+                            selectedCategory,
+                            dateLabel.trim(),
+                            timeLabel.trim().ifBlank { "Sepanjang Hari" },
+                            locationOrNote.trim().ifBlank { "Rumah" },
+                            assignedScope.trim().ifBlank { "Seluruh Keluarga" }
+                        )
+                    }
+                },
+                modifier = Modifier.testTag("event_submit_btn")
+            ) {
+                Text("Simpan Agenda")
+            }
+        },
+        dismissButton = {
+            TextButton(onClick = onDismiss) { Text("Batal") }
+        }
+    )
 }

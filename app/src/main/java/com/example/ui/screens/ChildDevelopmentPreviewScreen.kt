@@ -99,16 +99,33 @@ fun ChildDevelopmentPreviewScreen(
                         ) {
                             Icon(Icons.Rounded.Refresh, contentDescription = "Refresh baby growth")
                         }
-                        IconButton(
-                            onClick = { showAddGrowthDialog = true },
-                            modifier = Modifier.testTag("baby_add_growth_btn").size(48.dp)
-                        ) {
-                            Icon(Icons.Rounded.Add, contentDescription = "Log baby growth measurement")
-                        }
+                    }
+                    IconButton(
+                        onClick = { showAddGrowthDialog = true },
+                        modifier = Modifier.testTag("baby_add_growth_btn").size(48.dp)
+                    ) {
+                        Icon(Icons.Rounded.Add, contentDescription = "Log baby growth measurement")
                     }
                 },
                 colors = TopAppBarDefaults.topAppBarColors(containerColor = MaterialTheme.colorScheme.background)
             )
+        },
+        floatingActionButton = {
+            FloatingActionButton(
+                onClick = { showAddGrowthDialog = true },
+                containerColor = MalakulTheme.colors.gold,
+                contentColor = MalakulTheme.colors.navyHero,
+                modifier = Modifier.testTag("baby_fab_add_growth")
+            ) {
+                Row(
+                    modifier = Modifier.padding(horizontal = 14.dp),
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.spacedBy(6.dp)
+                ) {
+                    Icon(Icons.Rounded.Add, contentDescription = "Catat Pertumbuhan")
+                    Text("Catat BB/TB", fontWeight = FontWeight.Bold)
+                }
+            }
         }
     ) { innerPadding ->
         LazyColumn(
@@ -116,7 +133,7 @@ fun ChildDevelopmentPreviewScreen(
                 .fillMaxSize()
                 .padding(innerPadding)
                 .testTag("child_dev_list"),
-            contentPadding = PaddingValues(start = 16.dp, end = 16.dp, top = 8.dp, bottom = 32.dp),
+            contentPadding = PaddingValues(start = 16.dp, end = 16.dp, top = 8.dp, bottom = 80.dp),
             verticalArrangement = Arrangement.spacedBy(16.dp)
         ) {
             if (state.isLoadingBaby || state.isSubmitting) {
@@ -389,13 +406,14 @@ private fun AddBabyGrowthDialog(
 
     AlertDialog(
         onDismissRequest = onDismiss,
-        title = { Text("Log Growth · Baby #$babyId") },
+        title = { Text("Catat Pengukuran Tumbuh Kembang", fontWeight = FontWeight.Bold) },
         text = {
             Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
                 OutlinedTextField(
                     value = weightText,
                     onValueChange = { weightText = it; error = null },
-                    label = { Text("Weight (kg)") },
+                    label = { Text("Berat Badan (kg)") },
+                    placeholder = { Text("contoh: 11.5") },
                     keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal),
                     singleLine = true,
                     modifier = Modifier.fillMaxWidth().testTag("baby_weight_input")
@@ -403,7 +421,8 @@ private fun AddBabyGrowthDialog(
                 OutlinedTextField(
                     value = lengthText,
                     onValueChange = { lengthText = it; error = null },
-                    label = { Text("Length / Height (cm)") },
+                    label = { Text("Panjang / Tinggi Badan (cm)") },
+                    placeholder = { Text("contoh: 82.0") },
                     keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal),
                     singleLine = true,
                     modifier = Modifier.fillMaxWidth().testTag("baby_length_input")
@@ -411,7 +430,8 @@ private fun AddBabyGrowthDialog(
                 OutlinedTextField(
                     value = headText,
                     onValueChange = { headText = it; error = null },
-                    label = { Text("Head Circumference (cm)") },
+                    label = { Text("Lingkar Kepala (cm)") },
+                    placeholder = { Text("contoh: 46.5") },
                     keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal),
                     singleLine = true,
                     modifier = Modifier.fillMaxWidth().testTag("baby_head_input")
@@ -419,7 +439,7 @@ private fun AddBabyGrowthDialog(
                 OutlinedTextField(
                     value = dateText,
                     onValueChange = { dateText = it; error = null },
-                    label = { Text("Measurement Date (YYYY-MM-DD)") },
+                    label = { Text("Tanggal Pengukuran (YYYY-MM-DD)") },
                     singleLine = true,
                     modifier = Modifier.fillMaxWidth().testTag("baby_date_input")
                 )
@@ -432,24 +452,24 @@ private fun AddBabyGrowthDialog(
             Button(
                 enabled = !isSubmitting,
                 onClick = {
-                    val w = weightText.trim().toDoubleOrNull()
-                    val l = lengthText.trim().toDoubleOrNull()
-                    val h = headText.trim().toDoubleOrNull()
+                    val w = weightText.trim().replace(",", ".").toDoubleOrNull()
+                    val l = lengthText.trim().replace(",", ".").toDoubleOrNull()
+                    val h = headText.trim().replace(",", ".").toDoubleOrNull()
                     if (w == null || l == null || h == null || w <= 0 || l <= 0 || h <= 0) {
-                        error = "Please enter valid positive numbers for weight, length, and head circumference."
+                        error = "Masukkan angka yang valid dan positif untuk BB, TB, dan Lingkar Kepala."
                     } else if (dateText.isBlank()) {
-                        error = "Please enter a valid date (YYYY-MM-DD)."
+                        error = "Masukkan tanggal pengukuran (YYYY-MM-DD)."
                     } else {
                         onSubmit(w, l, h, dateText.trim())
                     }
                 },
                 modifier = Modifier.testTag("baby_submit_btn")
             ) {
-                Text("Save")
+                Text("Simpan Pengukuran")
             }
         },
         dismissButton = {
-            TextButton(onClick = onDismiss) { Text("Cancel") }
+            TextButton(onClick = onDismiss) { Text("Batal") }
         }
     )
 }

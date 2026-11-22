@@ -550,42 +550,124 @@ class MainViewModel(
     }
 
     fun addTransaction(type: String, amount: Double, description: String, transactionDate: String) {
-        val session = _uiState.value.authSession ?: return
+        val session = _uiState.value.authSession
+        val activeUser = _uiState.value.activeUser
+        val isIncome = type.equals("INCOME", ignoreCase = true)
+        val txAmountLong = amount.toLong()
+        val familyId = session?.familyId ?: "local_family"
+        val newTxId = "tx_${System.currentTimeMillis()}"
+
+        val newTransaction = TransactionItem(
+            id = newTxId,
+            title = description.ifBlank { if (isIncome) "Pemasukan Kas Keluarga" else "Pengeluaran Kas Keluarga" },
+            category = if (isIncome) "Pemasukan" else "Kebutuhan",
+            amount = txAmountLong,
+            type = if (isIncome) TransactionType.INCOME else TransactionType.EXPENSE,
+            date = transactionDate.ifBlank {
+                java.text.SimpleDateFormat("yyyy-MM-dd", java.util.Locale.US).format(java.util.Date())
+            },
+            paymentMethod = "Kas Keluarga",
+            responsibleMemberId = activeUser.id,
+            responsibleMemberName = activeUser.shortName,
+            description = description,
+            hasReceipt = false,
+            accessLevel = AccessLevel.FAMILY_SHARED
+        )
+
         viewModelScope.launch {
-            _uiState.update { it.copy(isSubmitting = true, globalError = null, actionMessage = null) }
-            when (val res = liveRepository.createTransaction(
-                baseUrl = _uiState.value.apiConfig.baseUrl,
-                familyId = session.familyId,
-                type = type,
-                amount = amount,
-                description = description,
-                transactionDate = transactionDate
-            )) {
-                is ApiResult.Success -> {
-                    _uiState.update { it.copy(isSubmitting = false, actionMessage = "Transaction saved to server.") }
-                    loadFinanceData()
+            try {
+                appDatabase.transactionDao().insertTransactions(
+                    listOf(TransactionEntity.fromDomain(newTransaction, familyId))
+                )
+            } catch (_: Exception) {}
+
+            _uiState.update { current ->
+                val updatedTransactions = listOf(newTransaction) + current.transactions
+                val currentSum = current.financialSummary
+                val updatedIncome = if (isIncome) currentSum.monthlyIncome + txAmountLong else currentSum.monthlyIncome
+                val updatedExpenses = if (!isIncome) currentSum.monthlyExpenses + txAmountLong else currentSum.monthlyExpenses
+                val updatedCash = if (isIncome) {
+                    currentSum.availableCash + txAmountLong
+                } else {
+                    (currentSum.availableCash - txAmountLong).coerceAtLeast(0L)
                 }
-                is ApiResult.Unauthorized -> handleTokenExpired(res.message)
-                is ApiResult.Error -> _uiState.update { it.copy(isSubmitting = false, globalError = res.message) }
+
+                current.copy(
+                    transactions = updatedTransactions,
+                    financialSummary = currentSum.copy(
+                        monthlyIncome = updatedIncome,
+                        monthlyExpenses = updatedExpenses,
+                        availableCash = updatedCash
+                    ),
+                    actionMessage = "Transaksi sebesar Rp ${String.format("%,d", txAmountLong)} berhasil dicatat."
+                )
+            }
+
+            if (session != null && _uiState.value.isLiveMode) {
+                _uiState.update { it.copy(isSubmitting = true) }
+                when (val res = liveRepository.createTransaction(
+                    baseUrl = _uiState.value.apiConfig.baseUrl,
+                    familyId = session.familyId,
+                    type = type,
+                    amount = amount,
+                    description = description,
+                    transactionDate = transactionDate
+                )) {
+                    is ApiResult.Success -> {
+                        _uiState.update { it.copy(isSubmitting = false, actionMessage = "Transaksi tersimpan di server.") }
+                        loadFinanceData()
+                    }
+                    is ApiResult.Unauthorized -> handleTokenExpired(res.message)
+                    is ApiResult.Error -> _uiState.update { it.copy(isSubmitting = false, globalError = res.message) }
+                }
             }
         }
     }
 
     fun deleteTransaction(transactionId: String) {
-        val session = _uiState.value.authSession ?: return
+        val session = _uiState.value.authSession
         viewModelScope.launch {
-            _uiState.update { it.copy(isSubmitting = true, globalError = null, actionMessage = null) }
-            when (val res = liveRepository.deleteTransaction(
-                baseUrl = _uiState.value.apiConfig.baseUrl,
-                familyId = session.familyId,
-                transactionId = transactionId
-            )) {
-                is ApiResult.Success -> {
-                    _uiState.update { it.copy(isSubmitting = false, actionMessage = "Transaction deleted.") }
-                    loadFinanceData()
+            _uiState.update { current ->
+                val targetTx = current.transactions.firstOrNull { it.id == transactionId }
+                val updatedList = current.transactions.filterNot { it.id == transactionId }
+                if (targetTx != null) {
+                    val currentSum = current.financialSummary
+                    val isIncome = targetTx.type == TransactionType.INCOME
+                    val updatedIncome = if (isIncome) (currentSum.monthlyIncome - targetTx.amount).coerceAtLeast(0L) else currentSum.monthlyIncome
+                    val updatedExpenses = if (!isIncome) (currentSum.monthlyExpenses - targetTx.amount).coerceAtLeast(0L) else currentSum.monthlyExpenses
+                    val updatedCash = if (isIncome) {
+                        (currentSum.availableCash - targetTx.amount).coerceAtLeast(0L)
+                    } else {
+                        currentSum.availableCash + targetTx.amount
+                    }
+                    current.copy(
+                        transactions = updatedList,
+                        financialSummary = currentSum.copy(
+                            monthlyIncome = updatedIncome,
+                            monthlyExpenses = updatedExpenses,
+                            availableCash = updatedCash
+                        ),
+                        actionMessage = "Transaksi berhasil dihapus."
+                    )
+                } else {
+                    current.copy(transactions = updatedList, actionMessage = "Transaksi berhasil dihapus.")
                 }
-                is ApiResult.Unauthorized -> handleTokenExpired(res.message)
-                is ApiResult.Error -> _uiState.update { it.copy(isSubmitting = false, globalError = res.message) }
+            }
+
+            if (session != null && _uiState.value.isLiveMode) {
+                _uiState.update { it.copy(isSubmitting = true) }
+                when (val res = liveRepository.deleteTransaction(
+                    baseUrl = _uiState.value.apiConfig.baseUrl,
+                    familyId = session.familyId,
+                    transactionId = transactionId
+                )) {
+                    is ApiResult.Success -> {
+                        _uiState.update { it.copy(isSubmitting = false, actionMessage = "Transaksi dihapus dari server.") }
+                        loadFinanceData()
+                    }
+                    is ApiResult.Unauthorized -> handleTokenExpired(res.message)
+                    is ApiResult.Error -> _uiState.update { it.copy(isSubmitting = false, globalError = res.message) }
+                }
             }
         }
     }
@@ -617,24 +699,56 @@ class MainViewModel(
         notes: String,
         recordDate: String
     ) {
-        val session = _uiState.value.authSession ?: return
+        val session = _uiState.value.authSession
+        val activeUser = _uiState.value.activeUser
+        val familyId = session?.familyId ?: "local_family"
+        val newRecord = MedicalRecord(
+            id = "med_${System.currentTimeMillis()}",
+            memberId = _uiState.value.selectedHealthMemberId.ifBlank { activeUser.id },
+            consultationDate = recordDate.ifBlank {
+                java.text.SimpleDateFormat("yyyy-MM-dd", java.util.Locale.US).format(java.util.Date())
+            },
+            facility = hospitalName.ifBlank { "Klinik / RS Keluarga" },
+            doctorName = doctorName.ifBlank { "Dokter Spesialis" },
+            reportedSymptoms = notes,
+            recordedDiagnosis = diagnosis,
+            prescribedSummary = "Pemeriksaan kesehatan berkala",
+            doctorRecommendations = notes,
+            accessLevel = AccessLevel.FAMILY_SHARED
+        )
+
         viewModelScope.launch {
-            _uiState.update { it.copy(isSubmitting = true, globalError = null, actionMessage = null) }
-            when (val res = liveRepository.createHealthRecord(
-                baseUrl = _uiState.value.apiConfig.baseUrl,
-                familyId = session.familyId,
-                diagnosis = diagnosis,
-                hospitalName = hospitalName,
-                doctorName = doctorName,
-                notes = notes,
-                recordDate = recordDate
-            )) {
-                is ApiResult.Success -> {
-                    _uiState.update { it.copy(isSubmitting = false, actionMessage = "Health record saved.") }
-                    loadHealthRecords()
+            try {
+                appDatabase.medicalRecordDao().insertMedicalRecords(
+                    listOf(MedicalRecordEntity.fromDomain(newRecord, familyId))
+                )
+            } catch (_: Exception) {}
+
+            _uiState.update { current ->
+                current.copy(
+                    medicalRecords = listOf(newRecord) + current.medicalRecords,
+                    actionMessage = "Catatan rekam medis berhasil disimpan."
+                )
+            }
+
+            if (session != null && _uiState.value.isLiveMode) {
+                _uiState.update { it.copy(isSubmitting = true) }
+                when (val res = liveRepository.createHealthRecord(
+                    baseUrl = _uiState.value.apiConfig.baseUrl,
+                    familyId = session.familyId,
+                    diagnosis = diagnosis,
+                    hospitalName = hospitalName,
+                    doctorName = doctorName,
+                    notes = notes,
+                    recordDate = recordDate
+                )) {
+                    is ApiResult.Success -> {
+                        _uiState.update { it.copy(isSubmitting = false, actionMessage = "Rekam medis tersimpan di server.") }
+                        loadHealthRecords()
+                    }
+                    is ApiResult.Unauthorized -> handleTokenExpired(res.message)
+                    is ApiResult.Error -> _uiState.update { it.copy(isSubmitting = false, globalError = res.message) }
                 }
-                is ApiResult.Unauthorized -> handleTokenExpired(res.message)
-                is ApiResult.Error -> _uiState.update { it.copy(isSubmitting = false, globalError = res.message) }
             }
         }
     }
@@ -671,56 +785,113 @@ class MainViewModel(
         notes: String,
         filePart: okhttp3.MultipartBody.Part? = null
     ) {
-        val session = _uiState.value.authSession ?: return
+        val session = _uiState.value.authSession
+        val activeUser = _uiState.value.activeUser
+        val familyId = session?.familyId ?: "local_family"
+        val parsedCat = try {
+            DocumentCategory.valueOf(category.uppercase())
+        } catch (_: Exception) {
+            DocumentCategory.OTHER
+        }
+
+        val newDoc = FamilyDocument(
+            id = "doc_${System.currentTimeMillis()}",
+            title = title,
+            category = parsedCat,
+            ownerMemberId = activeUser.id,
+            ownerName = activeUser.shortName,
+            issueDate = documentDate.ifBlank {
+                java.text.SimpleDateFormat("yyyy-MM-dd", java.util.Locale.US).format(java.util.Date())
+            },
+            expirationDate = null,
+            daysUntilExpiry = null,
+            description = notes,
+            tags = listOf(parsedCat.displayName, "Arsip Digital"),
+            uploadedBy = activeUser.shortName,
+            uploadTimestamp = "Baru saja",
+            fileFormat = "PDF / Image",
+            fileSizeLabel = "512 KB",
+            versionLabel = "v1.0",
+            status = DocumentStatus.ACTIVE,
+            accessLevel = AccessLevel.FAMILY_SHARED
+        )
+
         viewModelScope.launch {
-            _uiState.update { it.copy(isSubmitting = true, globalError = null, actionMessage = null) }
-            val res = if (filePart != null) {
-                liveRepository.uploadDocumentFile(
-                    baseUrl = _uiState.value.apiConfig.baseUrl,
-                    familyId = session.familyId,
-                    title = title,
-                    category = category,
-                    documentDate = documentDate,
-                    notes = notes,
-                    filePart = filePart
+            try {
+                appDatabase.documentDao().insertDocuments(
+                    listOf(DocumentEntity.fromDomain(newDoc, familyId))
                 )
-            } else {
-                liveRepository.createDocument(
-                    baseUrl = _uiState.value.apiConfig.baseUrl,
-                    familyId = session.familyId,
-                    title = title,
-                    category = category,
-                    documentDate = documentDate,
-                    notes = notes
+            } catch (_: Exception) {}
+
+            _uiState.update { current ->
+                current.copy(
+                    documents = listOf(newDoc) + current.documents,
+                    actionMessage = "Dokumen \"$title\" berhasil disimpan ke arsip."
                 )
             }
-            when (res) {
-                is ApiResult.Success -> {
-                    _uiState.update { it.copy(isSubmitting = false, actionMessage = "Document added to vault.") }
-                    loadDocuments()
+
+            if (session != null && _uiState.value.isLiveMode) {
+                _uiState.update { it.copy(isSubmitting = true) }
+                val res = if (filePart != null) {
+                    liveRepository.uploadDocumentFile(
+                        baseUrl = _uiState.value.apiConfig.baseUrl,
+                        familyId = session.familyId,
+                        title = title,
+                        category = category,
+                        documentDate = documentDate,
+                        notes = notes,
+                        filePart = filePart
+                    )
+                } else {
+                    liveRepository.createDocument(
+                        baseUrl = _uiState.value.apiConfig.baseUrl,
+                        familyId = session.familyId,
+                        title = title,
+                        category = category,
+                        documentDate = documentDate,
+                        notes = notes
+                    )
                 }
-                is ApiResult.Unauthorized -> handleTokenExpired(res.message)
-                is ApiResult.Error -> _uiState.update { it.copy(isSubmitting = false, globalError = res.message) }
+                when (res) {
+                    is ApiResult.Success -> {
+                        _uiState.update { it.copy(isSubmitting = false, actionMessage = "Dokumen tersimpan di server.") }
+                        loadDocuments()
+                    }
+                    is ApiResult.Unauthorized -> handleTokenExpired(res.message)
+                    is ApiResult.Error -> _uiState.update { it.copy(isSubmitting = false, globalError = res.message) }
+                }
             }
         }
     }
 
     fun deleteDocument(documentId: String) {
-        val session = _uiState.value.authSession ?: return
+        val session = _uiState.value.authSession
         viewModelScope.launch {
-            _uiState.update { it.copy(isSubmitting = true, globalError = null, actionMessage = null) }
-            when (val res = liveRepository.deleteDocument(
-                baseUrl = _uiState.value.apiConfig.baseUrl,
-                familyId = session.familyId,
-                documentId = documentId
-            )) {
-                is ApiResult.Success -> {
-                    appDatabase.documentDao().deleteDocumentById(documentId)
-                    _uiState.update { it.copy(isSubmitting = false, actionMessage = "Document deleted.") }
-                    loadDocuments()
+            try {
+                appDatabase.documentDao().deleteDocumentById(documentId)
+            } catch (_: Exception) {}
+
+            _uiState.update { current ->
+                current.copy(
+                    documents = current.documents.filterNot { it.id == documentId },
+                    actionMessage = "Dokumen berhasil dihapus."
+                )
+            }
+
+            if (session != null && _uiState.value.isLiveMode) {
+                _uiState.update { it.copy(isSubmitting = true) }
+                when (val res = liveRepository.deleteDocument(
+                    baseUrl = _uiState.value.apiConfig.baseUrl,
+                    familyId = session.familyId,
+                    documentId = documentId
+                )) {
+                    is ApiResult.Success -> {
+                        _uiState.update { it.copy(isSubmitting = false, actionMessage = "Dokumen dihapus dari server.") }
+                        loadDocuments()
+                    }
+                    is ApiResult.Unauthorized -> handleTokenExpired(res.message)
+                    is ApiResult.Error -> _uiState.update { it.copy(isSubmitting = false, globalError = res.message) }
                 }
-                is ApiResult.Unauthorized -> handleTokenExpired(res.message)
-                is ApiResult.Error -> _uiState.update { it.copy(isSubmitting = false, globalError = res.message) }
             }
         }
     }
@@ -767,25 +938,81 @@ class MainViewModel(
         headCircumferenceCm: Double,
         measurementDate: String
     ) {
-        val session = _uiState.value.authSession ?: return
+        val session = _uiState.value.authSession
+        val targetBabyId = babyId.ifBlank { _uiState.value.liveBabyId }
+        val dateStr = measurementDate.ifBlank {
+            java.text.SimpleDateFormat("yyyy-MM-dd", java.util.Locale.US).format(java.util.Date())
+        }
+        val newGrowth = GrowthMeasurement(
+            id = "growth_${System.currentTimeMillis()}",
+            childMemberId = targetBabyId,
+            ageMonths = 12,
+            dateLabel = dateStr,
+            weightKg = weightKg.toFloat(),
+            lengthCm = lengthCm.toFloat(),
+            headCircumferenceCm = headCircumferenceCm.toFloat(),
+            note = "Pengukuran berkala"
+        )
+
         viewModelScope.launch {
-            _uiState.update { it.copy(isSubmitting = true, globalError = null, actionMessage = null) }
-            when (val res = liveRepository.createBabyGrowth(
-                baseUrl = _uiState.value.apiConfig.baseUrl,
-                familyId = session.familyId,
-                babyId = babyId,
-                weightKg = weightKg,
-                lengthCm = lengthCm,
-                headCircumferenceCm = headCircumferenceCm,
-                measurementDate = measurementDate
-            )) {
-                is ApiResult.Success -> {
-                    _uiState.update { it.copy(isSubmitting = false, actionMessage = "Growth measurement recorded.") }
-                    loadBabyGrowth(babyId)
-                }
-                is ApiResult.Unauthorized -> handleTokenExpired(res.message)
-                is ApiResult.Error -> _uiState.update { it.copy(isSubmitting = false, globalError = res.message) }
+            _uiState.update { current ->
+                val updatedMeasurements = listOf(newGrowth) + current.growthMeasurements
+                val updatedChildren = syncChildLatestFromGrowth(current.childProfiles, updatedMeasurements)
+                current.copy(
+                    growthMeasurements = updatedMeasurements,
+                    childProfiles = updatedChildren,
+                    actionMessage = "Data tumbuh kembang anak berhasil dicatat."
+                )
             }
+
+            if (session != null && _uiState.value.isLiveMode) {
+                _uiState.update { it.copy(isSubmitting = true) }
+                when (val res = liveRepository.createBabyGrowth(
+                    baseUrl = _uiState.value.apiConfig.baseUrl,
+                    familyId = session.familyId,
+                    babyId = targetBabyId,
+                    weightKg = weightKg,
+                    lengthCm = lengthCm,
+                    headCircumferenceCm = headCircumferenceCm,
+                    measurementDate = measurementDate
+                )) {
+                    is ApiResult.Success -> {
+                        _uiState.update { it.copy(isSubmitting = false, actionMessage = "Data tumbuh kembang tersimpan di server.") }
+                        loadBabyGrowth(targetBabyId)
+                    }
+                    is ApiResult.Unauthorized -> handleTokenExpired(res.message)
+                    is ApiResult.Error -> _uiState.update { it.copy(isSubmitting = false, globalError = res.message) }
+                }
+            }
+        }
+    }
+
+    // --- 5. Family Calendar Events ---
+
+    fun addFamilyEvent(
+        title: String,
+        category: EventCategory,
+        dateLabel: String,
+        timeLabel: String,
+        locationOrNote: String,
+        assignedScope: String = "Seluruh Keluarga"
+    ) {
+        val newEvent = FamilyEvent(
+            id = "evt_${System.currentTimeMillis()}",
+            title = title,
+            category = category,
+            dateLabel = dateLabel.ifBlank { "Hari Ini" },
+            timeLabel = timeLabel.ifBlank { "Sepanjang Hari" },
+            locationOrNote = locationOrNote.ifBlank { "Rumah" },
+            assignedScope = assignedScope,
+            assignedMemberIds = emptyList(),
+            accessLevel = AccessLevel.FAMILY_SHARED
+        )
+        _uiState.update { current ->
+            current.copy(
+                familyEvents = listOf(newEvent) + current.familyEvents,
+                actionMessage = "Agenda \"$title\" berhasil ditambahkan."
+            )
         }
     }
 
