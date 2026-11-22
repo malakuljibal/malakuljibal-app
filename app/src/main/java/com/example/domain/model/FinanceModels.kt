@@ -54,7 +54,8 @@ data class BudgetCategoryItem(
     val id: String,
     val category: String,
     val plannedAmount: Long,
-    val actualAmount: Long
+    val actualAmount: Long,
+    val iconKey: String = "category"
 ) {
     val remaining: Long get() = plannedAmount - actualAmount
     val progress: Float
@@ -62,6 +63,15 @@ data class BudgetCategoryItem(
     val isOverspent: Boolean get() = actualAmount > plannedAmount
     val isWarning: Boolean get() = progress >= 0.80f && !isOverspent
 }
+
+data class WalletItem(
+    val id: String,
+    val name: String,
+    val initialBalance: Long,
+    val currentBalance: Long,
+    val iconKey: String = "wallet",
+    val colorHex: String = "#D4AF37"
+)
 
 data class SavingsGoal(
     val id: String,

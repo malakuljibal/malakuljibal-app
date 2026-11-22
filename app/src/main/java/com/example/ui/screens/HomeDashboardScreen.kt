@@ -450,67 +450,6 @@ fun HomeDashboardScreen(
             }
         }
 
-        // 8. Chronological Family Activity Feed
-        item {
-            SectionHeader(
-                title = "Family Activity Feed",
-                subtitle = "Recent household updates"
-            )
-        }
-        items(state.visibleActivityFeed, key = { it.id }) { item ->
-            MalakulCard(
-                modifier = Modifier.fillMaxWidth(),
-                contentPadding = PaddingValues(14.dp)
-            ) {
-                Row(
-                    verticalAlignment = Alignment.Top,
-                    horizontalArrangement = Arrangement.spacedBy(12.dp)
-                ) {
-                    val icon = when (item.module) {
-                        ActivityModule.FINANCE -> Icons.Outlined.Payments
-                        ActivityModule.HEALTH -> Icons.Outlined.MedicalServices
-                        ActivityModule.DOCUMENTS -> Icons.Outlined.Description
-                        ActivityModule.CHILD_DEV -> Icons.Outlined.ChildCare
-                        ActivityModule.CALENDAR -> Icons.Outlined.Event
-                    }
-                    ModuleIconCircle(
-                        icon = icon,
-                        bg = MaterialTheme.colorScheme.surfaceVariant,
-                        tint = MaterialTheme.colorScheme.onSurface
-                    )
-                    Column(modifier = Modifier.weight(1f)) {
-                        Row(
-                            modifier = Modifier.fillMaxWidth(),
-                            horizontalArrangement = Arrangement.SpaceBetween,
-                            verticalAlignment = Alignment.CenterVertically
-                        ) {
-                            Text(
-                                text = item.module.label.uppercase(),
-                                style = MaterialTheme.typography.labelSmall,
-                                color = MalakulTheme.colors.gold
-                            )
-                            Text(
-                                text = item.timestampLabel,
-                                style = MaterialTheme.typography.labelMedium,
-                                color = MaterialTheme.colorScheme.onSurfaceVariant
-                            )
-                        }
-                        Spacer(Modifier.height(3.dp))
-                        Text(
-                            text = item.title,
-                            style = MaterialTheme.typography.titleSmall,
-                            color = MaterialTheme.colorScheme.onSurface,
-                            fontWeight = FontWeight.SemiBold
-                        )
-                        Text(
-                            text = item.subtitle,
-                            style = MaterialTheme.typography.bodySmall,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant
-                        )
-                    }
-                }
-            }
-        }
     }
 }
 

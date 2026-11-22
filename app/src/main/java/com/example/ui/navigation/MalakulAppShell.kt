@@ -271,7 +271,17 @@ private fun MalakulNavContent(
                     viewModel.addTransaction(type, amount, desc, date)
                 },
                 onDeleteTransaction = { viewModel.deleteTransaction(it) },
-                onSelectPrivacyFilter = { viewModel.selectFinanceFilter(it) }
+                onSelectPrivacyFilter = { viewModel.selectFinanceFilter(it) },
+                onSaveWallet = { id, name, initialBalance, iconKey, colorHex ->
+                    viewModel.saveWallet(id, name, initialBalance, iconKey, colorHex)
+                },
+                onDeleteWallet = { viewModel.deleteWallet(it) },
+                onUpdateBudgetLimit = { catId, limit ->
+                    viewModel.updateBudgetLimit(catId, limit)
+                },
+                onUpdateBudgetCategoryIcon = { catId, iconKey ->
+                    viewModel.updateBudgetCategoryIcon(catId, iconKey)
+                }
             )
         }
         composable(MalakulRoutes.ROUTE_HEALTH) {

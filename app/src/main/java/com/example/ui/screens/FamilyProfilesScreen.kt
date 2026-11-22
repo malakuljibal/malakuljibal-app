@@ -41,8 +41,6 @@ fun FamilyProfilesScreen(
     val accessibleDocs = memberDocs.filter { AccessControl.canViewDocument(activeUser, it) }
     val hiddenDocsCount = memberDocs.size - accessibleDocs.size
 
-    val memberActivity = state.visibleActivityFeed.filter { it.relatedMemberId == selected.id }
-
     LazyColumn(
         modifier = modifier
             .fillMaxSize()
@@ -448,20 +446,6 @@ fun FamilyProfilesScreen(
                             style = MaterialTheme.typography.bodyMedium,
                             color = MaterialTheme.colorScheme.onSurface
                         )
-                    }
-                }
-                if (memberActivity.isNotEmpty()) {
-                    HorizontalDivider(
-                        modifier = Modifier.padding(vertical = 12.dp),
-                        color = MalakulTheme.colors.cardBorder
-                    )
-                    memberActivity.forEach { act ->
-                        Text(
-                            text = "${act.title} · ${act.timestampLabel}",
-                            style = MaterialTheme.typography.bodySmall,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant
-                        )
-                        Spacer(Modifier.height(4.dp))
                     }
                 }
             }

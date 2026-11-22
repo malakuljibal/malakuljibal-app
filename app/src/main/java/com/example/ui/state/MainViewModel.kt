@@ -58,6 +58,7 @@ data class MalakulUiState(
     val monthlyComparisons: List<MonthlyComparison>,
     val transactions: List<TransactionItem>,
     val budgetCategories: List<BudgetCategoryItem>,
+    val wallets: List<WalletItem> = emptyList(),
     val savingsGoals: List<SavingsGoal>,
     val medicalProfiles: List<MedicalProfile>,
     val healthMeasurements: List<HealthMeasurement>,
@@ -587,6 +588,61 @@ class MainViewModel(
                 is ApiResult.Unauthorized -> handleTokenExpired(res.message)
                 is ApiResult.Error -> _uiState.update { it.copy(isSubmitting = false, globalError = res.message) }
             }
+        }
+    }
+
+    // --- Wallet Management ---
+    fun saveWallet(id: String?, name: String, initialBalance: Long, iconKey: String = "wallet", colorHex: String = "#D4AF37") {
+        val currentWallets = _uiState.value.wallets.toMutableList()
+        if (id != null) {
+            val idx = currentWallets.indexOfFirst { it.id == id }
+            if (idx != -1) {
+                val existing = currentWallets[idx]
+                val balanceDiff = initialBalance - existing.initialBalance
+                currentWallets[idx] = existing.copy(
+                    name = name,
+                    initialBalance = initialBalance,
+                    currentBalance = existing.currentBalance + balanceDiff,
+                    iconKey = iconKey,
+                    colorHex = colorHex
+                )
+            }
+        } else {
+            val newWallet = WalletItem(
+                id = "wallet_${System.currentTimeMillis()}",
+                name = name,
+                initialBalance = initialBalance,
+                currentBalance = initialBalance,
+                iconKey = iconKey,
+                colorHex = colorHex
+            )
+            currentWallets.add(newWallet)
+        }
+        _uiState.update { it.copy(wallets = currentWallets) }
+    }
+
+    fun deleteWallet(walletId: String) {
+        _uiState.update { current ->
+            current.copy(wallets = current.wallets.filter { it.id != walletId })
+        }
+    }
+
+    // --- Budget Category Management ---
+    fun updateBudgetLimit(categoryId: String, newPlannedAmount: Long) {
+        _uiState.update { current ->
+            val updated = current.budgetCategories.map {
+                if (it.id == categoryId) it.copy(plannedAmount = newPlannedAmount) else it
+            }
+            current.copy(budgetCategories = updated)
+        }
+    }
+
+    fun updateBudgetCategoryIcon(categoryId: String, iconKey: String) {
+        _uiState.update { current ->
+            val updated = current.budgetCategories.map {
+                if (it.id == categoryId) it.copy(iconKey = iconKey) else it
+            }
+            current.copy(budgetCategories = updated)
         }
     }
 

@@ -231,56 +231,7 @@ object MockModuleSamples {
         HealthMeasurement("hm-14", ID_HAFIZ, MeasurementType.BLOOD_GLUCOSE, "102 mg/dL", 102f, "12 Nov", "Fasting check")
     )
 
-    val medicalRecords = listOf(
-        MedicalRecord(
-            id = "mr-1",
-            memberId = ID_TARIQ,
-            consultationDate = "05 Nov 2026",
-            facility = "Medistra Family Medical Center",
-            doctorName = "Dr. Hendra Kusuma, Sp.PD",
-            reportedSymptoms = "Routine annual executive preventive checkup; no acute complaints.",
-            recordedDiagnosis = "Good general health; mild seasonal rhinitis",
-            prescribedSummary = "Vitamin D3 1000 IU daily; saline nasal spray as needed",
-            doctorRecommendations = "Maintain 150 min/week aerobic activity; repeat routine labs in 12 months.",
-            accessLevel = AccessLevel.PRIVATE_PERSONAL
-        ),
-        MedicalRecord(
-            id = "mr-2",
-            memberId = ID_ZAYD,
-            consultationDate = "12 Nov 2026",
-            facility = "Bunda Family Clinic",
-            doctorName = "Dr. Rahma Putri, Sp.A",
-            reportedSymptoms = "Routine 14-month well-child checkup & milestone review.",
-            recordedDiagnosis = "Healthy toddler growth progression",
-            prescribedSummary = "Continue iron-rich family foods; vitamin D drops as advised",
-            doctorRecommendations = "Schedule MMR Dose 1 and Varicella vaccine at 15-month visit.",
-            accessLevel = AccessLevel.PARENT_MANAGED
-        ),
-        MedicalRecord(
-            id = "mr-3",
-            memberId = ID_NADIA,
-            consultationDate = "19 Oct 2026",
-            facility = "Premier Women's Wellness",
-            doctorName = "Dr. Sinta Dewi, Sp.OG",
-            reportedSymptoms = "Routine annual wellness exam & ferritin recheck.",
-            recordedDiagnosis = "Normal wellness evaluation",
-            prescribedSummary = "Balanced dietary iron; routine prenatal-postpartum multivitamin",
-            doctorRecommendations = "Follow-up in 12 months.",
-            accessLevel = AccessLevel.PRIVATE_PERSONAL
-        ),
-        MedicalRecord(
-            id = "mr-4",
-            memberId = ID_HAFIZ,
-            consultationDate = "08 Oct 2026",
-            facility = "Harapan Heart Outpatient Clinic",
-            doctorName = "Dr. Arman Wibowo, Sp.JP",
-            reportedSymptoms = "Quarterly blood pressure review; no chest discomfort or dizziness.",
-            recordedDiagnosis = "Stable managed essential hypertension",
-            prescribedSummary = "Continue prescribed antihypertensive regimen without change",
-            doctorRecommendations = "Continue daily morning walk and low-sodium diet; review in Dec 2026.",
-            accessLevel = AccessLevel.PRIVATE_PERSONAL
-        )
-    )
+    val medicalRecords = emptyList<MedicalRecord>()
 
     val medications = listOf(
         MedicationItem("med-1", ID_TARIQ, "Vitamin D3", "1000 IU", "Once daily with breakfast", "05 Nov 2026", null, "Dr. Hendra Kusuma", "Preventive supplementation", true),
@@ -559,12 +510,5 @@ object MockModuleSamples {
         FamilyEvent("ev-7", "Family Insurance Annual Renewal", EventCategory.DOCUMENT_EXPIRY, "31 Dec 2026", "Reminder", "Policy #MJ-88412 renewal review", "Parents", listOf(ID_TARIQ, ID_NADIA), AccessLevel.FAMILY_SHARED)
     )
 
-    val activityFeed = listOf(
-        ActivityFeedItem("act-1", ActivityModule.FINANCE, "Logged Organic Groceries & Fresh Market", "$640 · Family Shared · Receipt attached", "Nadia Al-Jibal", "2 hours ago", ID_NADIA, AccessLevel.FAMILY_SHARED),
-        ActivityFeedItem("act-2", ActivityModule.CHILD_DEV, "Zayd's 14-Month Growth Recorded", "Weight 10.1 kg · Length 78.5 cm · Head 46.8 cm", "Nadia Al-Jibal", "Yesterday", ID_ZAYD, AccessLevel.PARENT_MANAGED),
-        ActivityFeedItem("act-3", ActivityModule.DOCUMENTS, "Document Expiry Reminder Flagged", "Amina's Passport expires in 54 days", "Vault Monitor", "2 days ago", ID_AMINA, AccessLevel.PARENT_MANAGED),
-        ActivityFeedItem("act-4", ActivityModule.FINANCE, "Property Maintenance Reserve Recorded", "$1,850 · Admin-Only financial entry", "Tariq Al-Jibal", "4 days ago", ID_TARIQ, AccessLevel.ADMIN_ONLY),
-        ActivityFeedItem("act-5", ActivityModule.HEALTH, "Annual Preventive Lab Results Added", "Fasting glucose & lipid panel logged", "Tariq Al-Jibal", "6 days ago", ID_TARIQ, AccessLevel.PRIVATE_PERSONAL),
-        ActivityFeedItem("act-6", ActivityModule.CALENDAR, "Year-End Bandung Retreat Scheduled", "19 Dec 2026 · Assigned to Entire Family", "Tariq Al-Jibal", "1 week ago", null, AccessLevel.FAMILY_SHARED)
-    )
+    val activityFeed = emptyList<ActivityFeedItem>()
 }
