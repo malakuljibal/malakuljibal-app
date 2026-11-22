@@ -77,12 +77,12 @@ fun HealthPreviewScreen(
             ) {
                 Column(modifier = Modifier.weight(1f)) {
                     Text(
-                        text = if (state.isLiveMode) "MODULE D · LIVE API" else "MODULE D · OFFLINE DEMO",
+                        text = if (state.isLiveMode) "MODUL KESEHATAN · AKTIF" else "MODUL KESEHATAN KELUARGA",
                         style = MaterialTheme.typography.labelSmall,
                         color = MalakulTheme.colors.healthAccent
                     )
                     Text(
-                        text = "Health Records",
+                        text = "Rekam Medis & Kesehatan",
                         style = MaterialTheme.typography.headlineLarge,
                         color = MaterialTheme.colorScheme.onBackground
                     )

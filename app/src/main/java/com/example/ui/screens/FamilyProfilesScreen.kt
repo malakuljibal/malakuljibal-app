@@ -166,23 +166,23 @@ fun FamilyProfilesScreen(
                 HorizontalDivider(color = MalakulTheme.colors.cardBorder)
                 Spacer(Modifier.height(12.dp))
 
-                ProfileDetailRow(Icons.Outlined.Cake, "Date of Birth", "${selected.dateOfBirth} (${selected.gender})")
+                ProfileDetailRow(Icons.Outlined.Cake, "Tanggal Lahir & Usia", "${selected.dateOfBirth} (${selected.gender}) · ${selected.ageLabel}")
                 Spacer(Modifier.height(8.dp))
                 ProfileDetailRow(
                     Icons.Outlined.MailOutline,
-                    "Account & Email",
-                    selected.email ?: "Managed Child Profile (No independent login)"
+                    "Akun & Email",
+                    selected.email ?: "Profil Anak Terkelola (Tanpa Login Mandiri)"
                 )
                 if (selected.phone != null) {
                     Spacer(Modifier.height(8.dp))
-                    ProfileDetailRow(Icons.Outlined.Phone, "Contact Phone", selected.phone)
+                    ProfileDetailRow(Icons.Outlined.Phone, "Nomor Kontak", selected.phone)
                 }
                 if (selected.managedByParentIds.isNotEmpty()) {
                     val guardianNames = state.members
                         .filter { selected.managedByParentIds.contains(it.id) }
                         .joinToString(" & ") { it.shortName }
                     Spacer(Modifier.height(8.dp))
-                    ProfileDetailRow(Icons.Outlined.VerifiedUser, "Authorized Guardians", guardianNames)
+                    ProfileDetailRow(Icons.Outlined.VerifiedUser, "Wali Pengasuh Sah", guardianNames)
                 }
             }
         }

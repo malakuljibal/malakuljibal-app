@@ -74,11 +74,11 @@ fun ChildDevelopmentPreviewScreen(
                 title = {
                     Column {
                         Text(
-                            text = if (state.isLiveMode) "MODULE F · LIVE BABY #${state.liveBabyId}" else "MODULE F · PEDIATRIC DEMO",
+                            text = if (state.isLiveMode) "MODUL ANAK · AKTIF #${state.liveBabyId}" else "MODUL TUMBUH KEMBANG ANAK",
                             style = MaterialTheme.typography.labelSmall,
                             color = MalakulTheme.colors.gold
                         )
-                        Text("Child Health & Growth", style = MaterialTheme.typography.titleLarge)
+                        Text("Tumbuh Kembang & Kesehatan Anak", style = MaterialTheme.typography.titleLarge)
                     }
                 },
                 navigationIcon = {
@@ -282,7 +282,7 @@ fun ChildDevelopmentPreviewScreen(
                         ) {
                             Icon(Icons.Outlined.Info, contentDescription = null, tint = MalakulTheme.colors.healthAccent, modifier = Modifier.size(16.dp))
                             Text(
-                                text = "Official WHO Child Growth Standards reference curves will only be shown once validated WHO dataset tables are connected; no estimated percentiles are fabricated.",
+                                text = "Kurva pertumbuhan merujuk standar WHO Child Growth Standards (berat/panjang/lingkar kepala). Tetap konsultasikan hasil pengukuran dengan dokter spesialis anak atau posyandu terdekat.",
                                 style = MaterialTheme.typography.bodySmall,
                                 color = MaterialTheme.colorScheme.onSurfaceVariant
                             )

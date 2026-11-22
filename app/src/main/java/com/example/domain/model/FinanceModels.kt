@@ -17,6 +17,16 @@ data class FinancialSummary(
     val netBalance: Long get() = monthlyIncome - monthlyExpenses
     val budgetUtilization: Float
         get() = if (monthlyBudgetLimit <= 0L) 0f else (monthlyExpenses.toFloat() / monthlyBudgetLimit.toFloat())
+
+    // Pos Anggaran & Safe-to-Spend Helpers
+    val safeToSpend: Long
+        get() = (availableCash - totalSavings.coerceAtLeast(0L)).coerceAtLeast(0L)
+
+    val isBudgetWarning: Boolean
+        get() = budgetUtilization >= 0.80f && budgetUtilization < 1.0f
+
+    val isBudgetExceeded: Boolean
+        get() = budgetUtilization >= 1.0f
 }
 
 data class MonthlyComparison(
@@ -50,6 +60,7 @@ data class BudgetCategoryItem(
     val progress: Float
         get() = if (plannedAmount <= 0L) 0f else (actualAmount.toFloat() / plannedAmount.toFloat())
     val isOverspent: Boolean get() = actualAmount > plannedAmount
+    val isWarning: Boolean get() = progress >= 0.80f && !isOverspent
 }
 
 data class SavingsGoal(

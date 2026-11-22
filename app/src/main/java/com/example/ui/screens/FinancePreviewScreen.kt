@@ -95,12 +95,12 @@ fun FinancePreviewScreen(
             ) {
                 Column(modifier = Modifier.weight(1f)) {
                     Text(
-                        text = if (state.isLiveMode) "MODULE C · LIVE API" else "MODULE C · OFFLINE DEMO",
+                        text = if (state.isLiveMode) "MODUL KEUANGAN · AKTIF" else "MODUL KEUANGAN · KELUARGA SAMAWA",
                         style = MaterialTheme.typography.labelSmall,
                         color = MalakulTheme.colors.gold
                     )
                     Text(
-                        text = "Family Finance",
+                        text = "Keuangan Keluarga",
                         style = MaterialTheme.typography.headlineLarge,
                         color = MaterialTheme.colorScheme.onBackground
                     )
@@ -214,17 +214,73 @@ fun FinancePreviewScreen(
                         horizontalArrangement = Arrangement.SpaceBetween
                     ) {
                         Column(modifier = Modifier.weight(1f)) {
-                            Text("Income", style = MaterialTheme.typography.labelMedium, color = Color.White.copy(alpha = 0.7f))
+                            Text("Pemasukan", style = MaterialTheme.typography.labelMedium, color = Color.White.copy(alpha = 0.7f))
                             Text(formatCurrency(fin.monthlyIncome, fin.currencySymbol), style = MaterialTheme.typography.titleMedium.copy(fontFamily = DataMonoFamily), color = Color.White)
                         }
                         Column(modifier = Modifier.weight(1f)) {
-                            Text("Expenses", style = MaterialTheme.typography.labelMedium, color = Color.White.copy(alpha = 0.7f))
+                            Text("Pengeluaran", style = MaterialTheme.typography.labelMedium, color = Color.White.copy(alpha = 0.7f))
                             Text(formatCurrency(fin.monthlyExpenses, fin.currencySymbol), style = MaterialTheme.typography.titleMedium.copy(fontFamily = DataMonoFamily), color = MalakulTheme.colors.gold)
                         }
                         Column(modifier = Modifier.weight(1f)) {
-                            Text("Balance", style = MaterialTheme.typography.labelMedium, color = Color.White.copy(alpha = 0.7f))
+                            Text("Sisa Kas", style = MaterialTheme.typography.labelMedium, color = Color.White.copy(alpha = 0.7f))
                             Text(formatCurrency(fin.availableCash, fin.currencySymbol), style = MaterialTheme.typography.titleMedium.copy(fontFamily = DataMonoFamily), color = Color.White)
                         }
+                    }
+                    if (fin.monthlyBudgetLimit > 0L) {
+                        Spacer(Modifier.height(14.dp))
+                        val utilPercent = (fin.budgetUtilization * 100).toInt()
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            horizontalArrangement = Arrangement.SpaceBetween,
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            Text(
+                                text = "Batas Anggaran Bulanan (${utilPercent}%)",
+                                style = MaterialTheme.typography.labelSmall,
+                                color = Color.White.copy(alpha = 0.85f)
+                            )
+                            if (fin.isBudgetExceeded) {
+                                Surface(
+                                    shape = RoundedCornerShape(999.dp),
+                                    color = MalakulTheme.colors.danger
+                                ) {
+                                    Text(
+                                        text = "OVER BUDGET",
+                                        modifier = Modifier.padding(horizontal = 8.dp, vertical = 2.dp),
+                                        style = MaterialTheme.typography.labelSmall,
+                                        color = Color.White,
+                                        fontWeight = FontWeight.Bold
+                                    )
+                                }
+                            } else if (fin.isBudgetWarning) {
+                                Surface(
+                                    shape = RoundedCornerShape(999.dp),
+                                    color = MalakulTheme.colors.warningContainer
+                                ) {
+                                    Text(
+                                        text = "CAP ALERT 80%",
+                                        modifier = Modifier.padding(horizontal = 8.dp, vertical = 2.dp),
+                                        style = MaterialTheme.typography.labelSmall,
+                                        color = MalakulTheme.colors.warning,
+                                        fontWeight = FontWeight.Bold
+                                    )
+                                }
+                            }
+                        }
+                        Spacer(Modifier.height(6.dp))
+                        LinearProgressIndicator(
+                            progress = { fin.budgetUtilization.coerceIn(0f, 1f) },
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .height(6.dp)
+                                .clip(RoundedCornerShape(999.dp)),
+                            color = when {
+                                fin.isBudgetExceeded -> MalakulTheme.colors.danger
+                                fin.isBudgetWarning -> MalakulTheme.colors.warning
+                                else -> MalakulTheme.colors.gold
+                            },
+                            trackColor = Color.White.copy(alpha = 0.15f)
+                        )
                     }
                 }
             }

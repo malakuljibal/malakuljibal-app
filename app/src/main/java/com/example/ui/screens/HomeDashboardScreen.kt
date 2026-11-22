@@ -68,7 +68,7 @@ fun HomeDashboardScreen(
         item {
             CommandCenterHeroBanner(
                 familyName = if (state.isLiveMode && state.authSession != null)
-                    "Malakul Jibal · #${state.authSession.familyId}"
+                    "Keluarga Samawa"
                 else state.family.name,
                 motto = state.family.motto,
                 activeUser = activeUser,
@@ -80,19 +80,7 @@ fun HomeDashboardScreen(
             )
         }
 
-        // 2. Live API / Offline Demo Status Banner with Sync Refresh
-        item {
-            MockDataBanner(
-                apiBaseUrl = state.apiConfig.baseUrl,
-                activeRoleLabel = if (state.isLiveMode && state.authSession != null)
-                    "${activeUser.shortName} · Family #${state.authSession.familyId}"
-                else "${activeUser.shortName} · ${activeUser.role.shortBadge}",
-                isLiveMode = state.isLiveMode,
-                isRefreshing = state.isRefreshingAll,
-                onRefresh = onRefreshLive
-            )
-        }
-
+        // 2. Feedback Banner (when error/action occurs)
         if (state.globalError != null || state.actionMessage != null) {
             item {
                 ApiFeedbackBanner(

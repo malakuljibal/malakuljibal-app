@@ -103,19 +103,19 @@ data class MalakulUiState(
                     shortName = session.fullName.substringBefore(" "),
                     initials = initials,
                     avatarRes = null,
-                    dateOfBirth = "Synced Account",
-                    ageLabel = "Family #${session.familyId}",
+                    dateOfBirth = "Akun Terverifikasi",
+                    ageLabel = "Keluarga Utama",
                     gender = "-",
                     relationship = RelationshipType.HUSBAND,
                     role = parsedRole,
                     email = session.email,
                     phone = null,
                     hasIndependentAccount = true,
-                    bio = "Authenticated live session on ${apiConfig.baseUrl} (Family ID: ${session.familyId}).",
-                    financialContributionNote = "Connected to live household ledger.",
-                    monthlyAllowanceOrShare = "Live API Member",
+                    bio = "Akun resmi tersambung dengan brankas dan pembukuan keluarga Samawa.",
+                    financialContributionNote = "Pengelola Keuangan & Arsip Keluarga",
+                    monthlyAllowanceOrShare = "Penanggung Jawab",
                     permissions = members.first().permissions,
-                    personalHighlights = listOf("Authenticated via JWT · Family ID #${session.familyId}")
+                    personalHighlights = listOf("Sesi aktif terverifikasi")
                 )
             }
             return members.firstOrNull { it.id == activeUserId } ?: members.first()

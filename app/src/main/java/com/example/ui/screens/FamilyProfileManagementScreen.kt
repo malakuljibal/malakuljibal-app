@@ -15,10 +15,16 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.Dialog
+import android.app.DatePickerDialog
+import java.text.SimpleDateFormat
+import java.util.Calendar
+import java.util.Date
+import java.util.Locale
 import com.example.domain.model.FamilyMember
 import com.example.domain.model.RelationshipType
 import com.example.domain.model.UserRole
@@ -27,6 +33,46 @@ import com.example.ui.components.MemberAvatar
 import com.example.ui.components.RoleBadge
 import com.example.ui.state.MalakulUiState
 import com.example.ui.theme.MalakulTheme
+
+internal fun calculateAgeFromDob(dobString: String): String? {
+    val clean = dobString.trim()
+    if (clean.isBlank()) return null
+    val formats = listOf("yyyy-MM-dd", "yyyy/MM/dd", "dd-MM-yyyy", "dd/MM/yyyy")
+    var parsedDate: Date? = null
+    for (fmt in formats) {
+        try {
+            val sdf = SimpleDateFormat(fmt, Locale.US)
+            sdf.isLenient = false
+            parsedDate = sdf.parse(clean)
+            if (parsedDate != null) break
+        } catch (_: Exception) {}
+    }
+    val birthDate = parsedDate ?: return null
+    val birthCal = Calendar.getInstance().apply { time = birthDate }
+    val nowCal = Calendar.getInstance()
+
+    if (nowCal.before(birthCal)) return "0 Bulan"
+
+    var years = nowCal.get(Calendar.YEAR) - birthCal.get(Calendar.YEAR)
+    var months = nowCal.get(Calendar.MONTH) - birthCal.get(Calendar.MONTH)
+    val days = nowCal.get(Calendar.DAY_OF_MONTH) - birthCal.get(Calendar.DAY_OF_MONTH)
+
+    if (days < 0) {
+        months -= 1
+    }
+    if (months < 0) {
+        years -= 1
+        months += 12
+    }
+
+    return when {
+        years <= 0 && months <= 0 -> "0 Bulan"
+        years <= 0 -> "$months Bulan"
+        months == 0 -> "$years Tahun"
+        years < 5 -> "$years Thn $months Bln"
+        else -> "$years Tahun"
+    }
+}
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -458,6 +504,29 @@ fun FamilyMemberFormDialog(
     var phone by remember { mutableStateOf(initialMember.phone ?: "") }
     var bio by remember { mutableStateOf(initialMember.bio) }
 
+    val context = LocalContext.current
+    val openDatePicker = {
+        val calendar = Calendar.getInstance()
+        try {
+            val sdf = SimpleDateFormat("yyyy-MM-dd", Locale.US)
+            sdf.parse(dateOfBirth.trim())?.let { calendar.time = it }
+        } catch (_: Exception) {}
+
+        DatePickerDialog(
+            context,
+            { _, year, month, dayOfMonth ->
+                val selectedIso = String.format(Locale.US, "%04d-%02d-%02d", year, month + 1, dayOfMonth)
+                dateOfBirth = selectedIso
+                calculateAgeFromDob(selectedIso)?.let { calculated ->
+                    ageLabel = calculated
+                }
+            },
+            calendar.get(Calendar.YEAR),
+            calendar.get(Calendar.MONTH),
+            calendar.get(Calendar.DAY_OF_MONTH)
+        ).show()
+    }
+
     Dialog(onDismissRequest = onDismiss) {
         Surface(
             shape = RoundedCornerShape(20.dp),
@@ -514,10 +583,23 @@ fun FamilyMemberFormDialog(
                 ) {
                     OutlinedTextField(
                         value = dateOfBirth,
-                        onValueChange = { dateOfBirth = it },
+                        onValueChange = {
+                            dateOfBirth = it
+                            calculateAgeFromDob(it)?.let { calculated ->
+                                ageLabel = calculated
+                            }
+                        },
                         label = { Text("Tgl Lahir (YYYY-MM-DD)") },
+                        trailingIcon = {
+                            IconButton(onClick = openDatePicker) {
+                                Icon(
+                                    imageVector = Icons.Outlined.CalendarMonth,
+                                    contentDescription = "Pilih Tanggal Lahir"
+                                )
+                            }
+                        },
                         singleLine = true,
-                        modifier = Modifier.weight(1.2f).testTag("input_dob")
+                        modifier = Modifier.weight(1.3f).testTag("input_dob")
                     )
                     OutlinedTextField(
                         value = ageLabel,
@@ -656,6 +738,29 @@ fun FamilyMemberAddDialog(
     var phone by remember { mutableStateOf("") }
     var bio by remember { mutableStateOf("") }
 
+    val context = LocalContext.current
+    val openDatePicker = {
+        val calendar = Calendar.getInstance()
+        try {
+            val sdf = SimpleDateFormat("yyyy-MM-dd", Locale.US)
+            sdf.parse(dateOfBirth.trim())?.let { calendar.time = it }
+        } catch (_: Exception) {}
+
+        DatePickerDialog(
+            context,
+            { _, year, month, dayOfMonth ->
+                val selectedIso = String.format(Locale.US, "%04d-%02d-%02d", year, month + 1, dayOfMonth)
+                dateOfBirth = selectedIso
+                calculateAgeFromDob(selectedIso)?.let { calculated ->
+                    ageLabel = calculated
+                }
+            },
+            calendar.get(Calendar.YEAR),
+            calendar.get(Calendar.MONTH),
+            calendar.get(Calendar.DAY_OF_MONTH)
+        ).show()
+    }
+
     Dialog(onDismissRequest = onDismiss) {
         Surface(
             shape = RoundedCornerShape(20.dp),
@@ -712,10 +817,23 @@ fun FamilyMemberAddDialog(
                 ) {
                     OutlinedTextField(
                         value = dateOfBirth,
-                        onValueChange = { dateOfBirth = it },
+                        onValueChange = {
+                            dateOfBirth = it
+                            calculateAgeFromDob(it)?.let { calculated ->
+                                ageLabel = calculated
+                            }
+                        },
                         label = { Text("Tgl Lahir (YYYY-MM-DD)") },
+                        trailingIcon = {
+                            IconButton(onClick = openDatePicker) {
+                                Icon(
+                                    imageVector = Icons.Outlined.CalendarMonth,
+                                    contentDescription = "Pilih Tanggal Lahir"
+                                )
+                            }
+                        },
                         singleLine = true,
-                        modifier = Modifier.weight(1.2f).testTag("add_input_dob")
+                        modifier = Modifier.weight(1.3f).testTag("add_input_dob")
                     )
                     OutlinedTextField(
                         value = ageLabel,

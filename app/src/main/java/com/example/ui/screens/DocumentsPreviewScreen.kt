@@ -109,12 +109,12 @@ fun DocumentsPreviewScreen(
             ) {
                 Column(modifier = Modifier.weight(1f)) {
                     Text(
-                        text = if (state.isLiveMode) "MODULE E · LIVE API" else "MODULE E · OFFLINE DEMO",
+                        text = if (state.isLiveMode) "MODUL DOKUMEN · AKTIF" else "MODUL ARSIP KELUARGA",
                         style = MaterialTheme.typography.labelSmall,
                         color = MalakulTheme.colors.gold
                     )
                     Text(
-                        text = "Document Vault",
+                        text = "Arsip & Dokumen Keluarga",
                         style = MaterialTheme.typography.headlineLarge,
                         color = MaterialTheme.colorScheme.onBackground
                     )

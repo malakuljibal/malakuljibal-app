@@ -37,7 +37,7 @@ fun CalendarScreen(
             TopAppBar(
                 title = {
                     Column {
-                        Text("UNIFIED SCHEDULE · MOCK", style = MaterialTheme.typography.labelSmall, color = MalakulTheme.colors.gold)
+                        Text("JADWAL KELUARGA TERPADU", style = MaterialTheme.typography.labelSmall, color = MalakulTheme.colors.gold)
                         Text("Family Calendar & Reminders", style = MaterialTheme.typography.titleLarge)
                     }
                 },
