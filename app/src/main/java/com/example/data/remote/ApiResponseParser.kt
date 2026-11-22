@@ -105,11 +105,11 @@ object ApiResponseParser {
             if (it > 0L) it else maxOf(expense, income, 1L)
         }
         val monthLabel = firstNonBlank(obj.optString("month"), obj.optString("period"), "Live Household Ledger")!!
-        val currency = firstNonBlank(obj.optString("currency_symbol"), obj.optString("currency")) ?: "$"
+        val currency = firstNonBlank(obj.optString("currency_symbol"), obj.optString("currency")) ?: "IDR"
 
         return FinancialSummary(
             monthLabel = monthLabel,
-            currencySymbol = if (currency.equals("IDR", true)) "Rp " else if (currency.equals("USD", true)) "$" else currency,
+            currencySymbol = if (currency.equals("IDR", true) || currency == "Rp" || currency == "Rp ") "Rp " else if (currency.equals("USD", true) || currency == "$") "$" else currency,
             monthlyIncome = income,
             monthlyExpenses = expense,
             availableCash = if (balance != 0L) balance else (income - expense).coerceAtLeast(0L),

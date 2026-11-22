@@ -26,7 +26,9 @@ import com.example.ui.components.*
 import com.example.ui.state.MalakulUiState
 import com.example.ui.theme.DataMonoFamily
 import com.example.ui.theme.MalakulTheme
+import androidx.compose.foundation.clickable
 import java.text.SimpleDateFormat
+import java.util.Calendar
 import java.util.Date
 import java.util.Locale
 
@@ -380,12 +382,38 @@ private fun AddBabyGrowthDialog(
     onDismiss: () -> Unit,
     onSubmit: (weightKg: Double, lengthCm: Double, headCircumferenceCm: Double, measurementDate: String) -> Unit
 ) {
+    val context = androidx.compose.ui.platform.LocalContext.current
     val todayIso = remember { SimpleDateFormat("yyyy-MM-dd", Locale.US).format(Date()) }
     var weightText by remember { mutableStateOf("") }
     var lengthText by remember { mutableStateOf("") }
     var headText by remember { mutableStateOf("") }
     var dateText by remember { mutableStateOf(todayIso) }
     var error by remember { mutableStateOf<String?>(null) }
+
+    fun showDatePicker() {
+        val cal = Calendar.getInstance()
+        val parts = dateText.split("-")
+        if (parts.size == 3) {
+            val y = parts[0].toIntOrNull()
+            val m = parts[1].toIntOrNull()
+            val d = parts[2].toIntOrNull()
+            if (y != null && m != null && d != null) {
+                cal.set(y, m - 1, d)
+            }
+        }
+        android.app.DatePickerDialog(
+            context,
+            { _, year, month, dayOfMonth ->
+                val selectedCal = Calendar.getInstance()
+                selectedCal.set(year, month, dayOfMonth)
+                dateText = SimpleDateFormat("yyyy-MM-dd", Locale.US).format(selectedCal.time)
+                error = null
+            },
+            cal.get(Calendar.YEAR),
+            cal.get(Calendar.MONTH),
+            cal.get(Calendar.DAY_OF_MONTH)
+        ).show()
+    }
 
     AlertDialog(
         onDismissRequest = onDismiss,
@@ -418,10 +446,19 @@ private fun AddBabyGrowthDialog(
                 )
                 OutlinedTextField(
                     value = dateText,
-                    onValueChange = { dateText = it; error = null },
-                    label = { Text("Measurement Date (YYYY-MM-DD)") },
+                    onValueChange = { },
+                    readOnly = true,
+                    label = { Text("Measurement Date") },
+                    trailingIcon = {
+                        IconButton(onClick = { showDatePicker() }) {
+                            Icon(Icons.Outlined.CalendarToday, contentDescription = "Pilih Tanggal")
+                        }
+                    },
                     singleLine = true,
-                    modifier = Modifier.fillMaxWidth().testTag("baby_date_input")
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .testTag("baby_date_input")
+                        .clickable { showDatePicker() }
                 )
                 if (error != null) {
                     Text(error!!, style = MaterialTheme.typography.bodySmall, color = MalakulTheme.colors.danger)

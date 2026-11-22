@@ -23,123 +23,17 @@ object MockModuleSamples {
         monthlyBudgetLimit = 15000000
     )
 
-    val monthlyComparisons = listOf(
-        MonthlyComparison("Jun", 8900, 5400),
-        MonthlyComparison("Jul", 9100, 5850),
-        MonthlyComparison("Aug", 9200, 5210),
-        MonthlyComparison("Sep", 9050, 6100),
-        MonthlyComparison("Oct", 9300, 5480),
-        MonthlyComparison("Nov", 9450, 5620)
-    )
+    val monthlyComparisons = emptyList<MonthlyComparison>()
 
-    val transactions = listOf(
-        TransactionItem(
-            id = "tx-01",
-            title = "Monthly Architecture Consulting",
-            category = "Primary Salary",
-            amount = 7200,
-            type = TransactionType.INCOME,
-            date = "01 Nov 2026",
-            paymentMethod = "Bank Transfer · Family Checking",
-            responsibleMemberId = ID_TARIQ,
-            responsibleMemberName = "Tariq Al-Jibal",
-            description = "Monthly household salary deposit.",
-            hasReceipt = true,
-            accessLevel = AccessLevel.FAMILY_SHARED
-        ),
-        TransactionItem(
-            id = "tx-02",
-            title = "Design Advisory Retainer",
-            category = "Secondary Income",
-            amount = 2250,
-            type = TransactionType.INCOME,
-            date = "05 Nov 2026",
-            paymentMethod = "Bank Transfer · Joint Account",
-            responsibleMemberId = ID_NADIA,
-            responsibleMemberName = "Nadia Al-Jibal",
-            description = "Part-time studio creative direction retainer.",
-            hasReceipt = true,
-            accessLevel = AccessLevel.FAMILY_SHARED
-        ),
-        TransactionItem(
-            id = "tx-03",
-            title = "Organic Groceries & Fresh Market",
-            category = "Groceries & Kitchen",
-            amount = 640,
-            type = TransactionType.EXPENSE,
-            date = "16 Nov 2026",
-            paymentMethod = "Family Debit Card",
-            responsibleMemberId = ID_NADIA,
-            responsibleMemberName = "Nadia Al-Jibal",
-            description = "Bi-weekly produce, dairy, and MPASI ingredients for Zayd.",
-            hasReceipt = true,
-            accessLevel = AccessLevel.FAMILY_SHARED
-        ),
-        TransactionItem(
-            id = "tx-04",
-            title = "Amina Elementary Tuition & Art Club",
-            category = "Child Education",
-            amount = 980,
-            type = TransactionType.EXPENSE,
-            date = "10 Nov 2026",
-            paymentMethod = "Auto-Debit · Education Account",
-            responsibleMemberId = ID_TARIQ,
-            responsibleMemberName = "Tariq Al-Jibal",
-            description = "Monthly tuition and extracurricular watercolor workshop.",
-            hasReceipt = true,
-            accessLevel = AccessLevel.FAMILY_SHARED
-        ),
-        TransactionItem(
-            id = "tx-05",
-            title = "Bunda Family Clinic · Pediatric Check",
-            category = "Healthcare & Wellness",
-            amount = 215,
-            type = TransactionType.EXPENSE,
-            date = "12 Nov 2026",
-            paymentMethod = "Health Savings Card",
-            responsibleMemberId = ID_NADIA,
-            responsibleMemberName = "Nadia Al-Jibal",
-            description = "14-month growth consultation and vitamin supplement.",
-            hasReceipt = true,
-            accessLevel = AccessLevel.PARENT_MANAGED
-        ),
-        TransactionItem(
-            id = "tx-06",
-            title = "Property Tax & Maintenance Reserve",
-            category = "Housing & Utilities",
-            amount = 1850,
-            type = TransactionType.EXPENSE,
-            date = "04 Nov 2026",
-            paymentMethod = "Reserve Transfer",
-            responsibleMemberId = ID_TARIQ,
-            responsibleMemberName = "Tariq Al-Jibal",
-            description = "Scheduled estate reserve allocation (Admin-only record).",
-            hasReceipt = true,
-            accessLevel = AccessLevel.ADMIN_ONLY
-        ),
-        TransactionItem(
-            id = "tx-07",
-            title = "Personal Anniversary Gift Reserve",
-            category = "Personal",
-            amount = 320,
-            type = TransactionType.EXPENSE,
-            date = "14 Nov 2026",
-            paymentMethod = "Personal Card",
-            responsibleMemberId = ID_TARIQ,
-            responsibleMemberName = "Tariq Al-Jibal",
-            description = "Private personal expense visible only to Tariq.",
-            hasReceipt = false,
-            accessLevel = AccessLevel.PRIVATE_PERSONAL
-        )
-    )
+    val transactions = emptyList<TransactionItem>()
 
     val budgetCategories = listOf(
-        BudgetCategoryItem("b-1", "Housing & Utilities", 2100, 1980),
-        BudgetCategoryItem("b-2", "Groceries & Kitchen", 1200, 1085),
-        BudgetCategoryItem("b-3", "Child Education", 1000, 980),
-        BudgetCategoryItem("b-4", "Healthcare & Wellness", 600, 695),
-        BudgetCategoryItem("b-5", "Transport & Fuel", 500, 410),
-        BudgetCategoryItem("b-6", "Family Leisure & Charity", 1000, 470)
+        BudgetCategoryItem("b-1", "Housing & Utilities", 2100, 0),
+        BudgetCategoryItem("b-2", "Groceries & Kitchen", 1200, 0),
+        BudgetCategoryItem("b-3", "Child Education", 1000, 0),
+        BudgetCategoryItem("b-4", "Healthcare & Wellness", 600, 0),
+        BudgetCategoryItem("b-5", "Transport & Fuel", 500, 0),
+        BudgetCategoryItem("b-6", "Family Leisure & Charity", 1000, 0)
     )
 
     val savingsGoals = listOf(

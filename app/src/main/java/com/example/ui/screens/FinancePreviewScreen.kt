@@ -34,7 +34,9 @@ import com.example.ui.components.*
 import com.example.ui.state.MalakulUiState
 import com.example.ui.theme.DataMonoFamily
 import com.example.ui.theme.MalakulTheme
+import androidx.compose.foundation.clickable
 import java.text.SimpleDateFormat
+import java.util.Calendar
 import java.util.Date
 import java.util.Locale
 
@@ -73,6 +75,8 @@ fun FinancePreviewScreen(
     if (showAddDialog) {
         AddTransactionDialog(
             isSubmitting = state.isSubmitting,
+            wallets = state.wallets,
+            budgetCategories = state.budgetCategories,
             onDismiss = { showAddDialog = false },
             onSubmit = { type, amount, desc, date ->
                 onAddTransaction(type, amount, desc, date)
@@ -923,15 +927,79 @@ fun FinancePreviewScreen(
 @Composable
 private fun AddTransactionDialog(
     isSubmitting: Boolean,
+    wallets: List<WalletItem>,
+    budgetCategories: List<BudgetCategoryItem>,
     onDismiss: () -> Unit,
     onSubmit: (type: String, amount: Double, description: String, transactionDate: String) -> Unit
 ) {
+    val context = androidx.compose.ui.platform.LocalContext.current
     val todayIso = remember { SimpleDateFormat("yyyy-MM-dd", Locale.US).format(Date()) }
     var selectedType by remember { mutableStateOf("expense") }
     var amountText by remember { mutableStateOf("") }
     var description by remember { mutableStateOf("") }
     var dateText by remember { mutableStateOf(todayIso) }
     var validationError by remember { mutableStateOf<String?>(null) }
+
+    // Dropdown options
+    val defaultExpenseCategories = listOf(
+        "Makanan & Minuman",
+        "Belanja Bulanan",
+        "Transportasi",
+        "Tagihan & Utilitas",
+        "Kesehatan & Obat",
+        "Pendidikan",
+        "Hiburan & Rekreasi",
+        "Lain-lain"
+    )
+    val defaultIncomeCategories = listOf(
+        "Gaji Pokok",
+        "Bonus & Investasi",
+        "Usaha & Bisnis",
+        "Lain-lain"
+    )
+
+    val categoryList = remember(selectedType, budgetCategories) {
+        val budgetNames = budgetCategories.map { it.name }
+        if (selectedType == "expense") {
+            (budgetNames + defaultExpenseCategories).distinct()
+        } else {
+            defaultIncomeCategories
+        }
+    }
+
+    var selectedCategory by remember(categoryList) { mutableStateOf(categoryList.firstOrNull() ?: "Lain-lain") }
+    var categoryDropdownExpanded by remember { mutableStateOf(false) }
+
+    val walletOptions = remember(wallets) {
+        if (wallets.isNotEmpty()) wallets.map { it.name } else listOf("Kas Utama", "Rekening Bank")
+    }
+    var selectedWallet by remember(walletOptions) { mutableStateOf(walletOptions.firstOrNull() ?: "Kas Utama") }
+    var walletDropdownExpanded by remember { mutableStateOf(false) }
+
+    fun showDatePicker() {
+        val cal = Calendar.getInstance()
+        val parts = dateText.split("-")
+        if (parts.size == 3) {
+            val y = parts[0].toIntOrNull()
+            val m = parts[1].toIntOrNull()
+            val d = parts[2].toIntOrNull()
+            if (y != null && m != null && d != null) {
+                cal.set(y, m - 1, d)
+            }
+        }
+        android.app.DatePickerDialog(
+            context,
+            { _, year, month, dayOfMonth ->
+                val selectedCal = Calendar.getInstance()
+                selectedCal.set(year, month, dayOfMonth)
+                dateText = SimpleDateFormat("yyyy-MM-dd", Locale.US).format(selectedCal.time)
+                validationError = null
+            },
+            cal.get(Calendar.YEAR),
+            cal.get(Calendar.MONTH),
+            cal.get(Calendar.DAY_OF_MONTH)
+        ).show()
+    }
 
     AlertDialog(
         onDismissRequest = onDismiss,
@@ -950,10 +1018,83 @@ private fun AddTransactionDialog(
                         label = { Text("Income") }
                     )
                 }
+
+                // Dropdown Pilihan Kategori
+                Box(modifier = Modifier.fillMaxWidth()) {
+                    OutlinedCard(
+                        onClick = { categoryDropdownExpanded = true },
+                        modifier = Modifier.fillMaxWidth()
+                    ) {
+                        Row(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(horizontal = 14.dp, vertical = 12.dp),
+                            horizontalArrangement = Arrangement.SpaceBetween,
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            Column {
+                                Text("Kategori", style = MaterialTheme.typography.labelSmall, color = MalakulTheme.colors.textMuted)
+                                Text(selectedCategory, style = MaterialTheme.typography.bodyMedium, fontWeight = FontWeight.SemiBold)
+                            }
+                            Icon(Icons.Filled.ArrowDropDown, contentDescription = "Pilih Kategori")
+                        }
+                    }
+                    DropdownMenu(
+                        expanded = categoryDropdownExpanded,
+                        onDismissRequest = { categoryDropdownExpanded = false }
+                    ) {
+                        categoryList.forEach { cat ->
+                            DropdownMenuItem(
+                                text = { Text(cat) },
+                                onClick = {
+                                    selectedCategory = cat
+                                    categoryDropdownExpanded = false
+                                }
+                            )
+                        }
+                    }
+                }
+
+                // Dropdown Pilihan Dompet (Wallet)
+                Box(modifier = Modifier.fillMaxWidth()) {
+                    OutlinedCard(
+                        onClick = { walletDropdownExpanded = true },
+                        modifier = Modifier.fillMaxWidth()
+                    ) {
+                        Row(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(horizontal = 14.dp, vertical = 12.dp),
+                            horizontalArrangement = Arrangement.SpaceBetween,
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            Column {
+                                Text("Dompet / Rekening", style = MaterialTheme.typography.labelSmall, color = MalakulTheme.colors.textMuted)
+                                Text(selectedWallet, style = MaterialTheme.typography.bodyMedium, fontWeight = FontWeight.SemiBold)
+                            }
+                            Icon(Icons.Filled.ArrowDropDown, contentDescription = "Pilih Dompet")
+                        }
+                    }
+                    DropdownMenu(
+                        expanded = walletDropdownExpanded,
+                        onDismissRequest = { walletDropdownExpanded = false }
+                    ) {
+                        walletOptions.forEach { wName ->
+                            DropdownMenuItem(
+                                text = { Text(wName) },
+                                onClick = {
+                                    selectedWallet = wName
+                                    walletDropdownExpanded = false
+                                }
+                            )
+                        }
+                    }
+                }
+
                 OutlinedTextField(
                     value = amountText,
                     onValueChange = { amountText = it; validationError = null },
-                    label = { Text("Amount") },
+                    label = { Text("Amount (Rp)") },
                     keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal),
                     singleLine = true,
                     modifier = Modifier.fillMaxWidth().testTag("tx_amount_input")
@@ -967,10 +1108,19 @@ private fun AddTransactionDialog(
                 )
                 OutlinedTextField(
                     value = dateText,
-                    onValueChange = { dateText = it; validationError = null },
-                    label = { Text("Transaction Date (YYYY-MM-DD)") },
+                    onValueChange = { },
+                    readOnly = true,
+                    label = { Text("Transaction Date") },
+                    trailingIcon = {
+                        IconButton(onClick = { showDatePicker() }) {
+                            Icon(Icons.Outlined.CalendarToday, contentDescription = "Pilih Tanggal Transaksi")
+                        }
+                    },
                     singleLine = true,
-                    modifier = Modifier.fillMaxWidth().testTag("tx_date_input")
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .testTag("tx_date_input")
+                        .clickable { showDatePicker() }
                 )
                 if (validationError != null) {
                     Text(validationError!!, style = MaterialTheme.typography.bodySmall, color = MalakulTheme.colors.danger)
@@ -989,7 +1139,12 @@ private fun AddTransactionDialog(
                     } else if (dateText.isBlank()) {
                         validationError = "Please enter a date (YYYY-MM-DD)."
                     } else {
-                        onSubmit(selectedType, amount, description.trim(), dateText.trim())
+                        val fullDescription = if (description.isNotBlank()) {
+                            "[$selectedCategory] ${description.trim()} · $selectedWallet"
+                        } else {
+                            "[$selectedCategory] · $selectedWallet"
+                        }
+                        onSubmit(selectedType, amount, fullDescription, dateText.trim())
                     }
                 },
                 modifier = Modifier.testTag("tx_submit_btn")

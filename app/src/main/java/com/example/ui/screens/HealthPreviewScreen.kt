@@ -25,7 +25,9 @@ import com.example.ui.components.*
 import com.example.ui.state.MalakulUiState
 import com.example.ui.theme.DataMonoFamily
 import com.example.ui.theme.MalakulTheme
+import androidx.compose.foundation.clickable
 import java.text.SimpleDateFormat
+import java.util.Calendar
 import java.util.Date
 import java.util.Locale
 
@@ -326,13 +328,40 @@ private fun AddHealthRecordDialog(
     onDismiss: () -> Unit,
     onSubmit: (diagnosis: String, hospitalName: String, doctorName: String, notes: String, recordDate: String) -> Unit
 ) {
+    val context = androidx.compose.ui.platform.LocalContext.current
     val todayIso = remember { SimpleDateFormat("yyyy-MM-dd", Locale.US).format(Date()) }
     var diagnosis by remember { mutableStateOf("") }
     var hospitalName by remember { mutableStateOf("") }
     var doctorName by remember { mutableStateOf("") }
     var notes by remember { mutableStateOf("") }
     var recordDate by remember { mutableStateOf(todayIso) }
+    var reminderDate by remember { mutableStateOf("") }
+    var documentAttachment by remember { mutableStateOf("") }
     var error by remember { mutableStateOf<String?>(null) }
+
+    fun showDatePicker(initialIso: String, onPicked: (String) -> Unit) {
+        val cal = Calendar.getInstance()
+        val parts = initialIso.split("-")
+        if (parts.size == 3) {
+            val y = parts[0].toIntOrNull()
+            val m = parts[1].toIntOrNull()
+            val d = parts[2].toIntOrNull()
+            if (y != null && m != null && d != null) {
+                cal.set(y, m - 1, d)
+            }
+        }
+        android.app.DatePickerDialog(
+            context,
+            { _, year, month, dayOfMonth ->
+                val selectedCal = Calendar.getInstance()
+                selectedCal.set(year, month, dayOfMonth)
+                onPicked(SimpleDateFormat("yyyy-MM-dd", Locale.US).format(selectedCal.time))
+            },
+            cal.get(Calendar.YEAR),
+            cal.get(Calendar.MONTH),
+            cal.get(Calendar.DAY_OF_MONTH)
+        ).show()
+    }
 
     AlertDialog(
         onDismissRequest = onDismiss,
@@ -362,10 +391,52 @@ private fun AddHealthRecordDialog(
                 )
                 OutlinedTextField(
                     value = recordDate,
-                    onValueChange = { recordDate = it; error = null },
-                    label = { Text("Record Date (YYYY-MM-DD)") },
+                    onValueChange = { },
+                    readOnly = true,
+                    label = { Text("Record Date") },
+                    trailingIcon = {
+                        IconButton(onClick = { showDatePicker(recordDate) { recordDate = it; error = null } }) {
+                            Icon(Icons.Outlined.CalendarToday, contentDescription = "Pilih Tanggal Periksa")
+                        }
+                    },
                     singleLine = true,
-                    modifier = Modifier.fillMaxWidth().testTag("health_date_input")
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .testTag("health_date_input")
+                        .clickable { showDatePicker(recordDate) { recordDate = it; error = null } }
+                )
+                OutlinedTextField(
+                    value = reminderDate,
+                    onValueChange = { },
+                    readOnly = true,
+                    label = { Text("Pengingat Kontrol / Kalender (Opsional)") },
+                    placeholder = { Text("Pilih tanggal jadwal kontrol berikutnya") },
+                    trailingIcon = {
+                        IconButton(onClick = {
+                            val base = if (reminderDate.isNotBlank()) reminderDate else todayIso
+                            showDatePicker(base) { reminderDate = it }
+                        }) {
+                            Icon(Icons.Outlined.EventNote, contentDescription = "Pilih Pengingat")
+                        }
+                    },
+                    singleLine = true,
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .clickable {
+                            val base = if (reminderDate.isNotBlank()) reminderDate else todayIso
+                            showDatePicker(base) { reminderDate = it }
+                        }
+                )
+                OutlinedTextField(
+                    value = documentAttachment,
+                    onValueChange = { documentAttachment = it },
+                    label = { Text("Lampiran Dokumen / File (Nama / Link)") },
+                    placeholder = { Text("Contoh: Hasil-Lab-Darah.pdf / Resep-Obat.jpg") },
+                    trailingIcon = {
+                        Icon(Icons.Outlined.AttachFile, contentDescription = "Lampiran Dokumen")
+                    },
+                    singleLine = true,
+                    modifier = Modifier.fillMaxWidth()
                 )
                 OutlinedTextField(
                     value = notes,
@@ -386,7 +457,16 @@ private fun AddHealthRecordDialog(
                     if (diagnosis.isBlank() || hospitalName.isBlank() || doctorName.isBlank() || recordDate.isBlank()) {
                         error = "Please complete diagnosis, hospital, doctor, and date."
                     } else {
-                        onSubmit(diagnosis.trim(), hospitalName.trim(), doctorName.trim(), notes.trim(), recordDate.trim())
+                        val fullNotesBuilder = StringBuilder(notes.trim())
+                        if (reminderDate.isNotBlank()) {
+                            if (fullNotesBuilder.isNotEmpty()) fullNotesBuilder.append("\n")
+                            fullNotesBuilder.append("📅 Pengingat Kontrol: $reminderDate")
+                        }
+                        if (documentAttachment.isNotBlank()) {
+                            if (fullNotesBuilder.isNotEmpty()) fullNotesBuilder.append("\n")
+                            fullNotesBuilder.append("📎 Lampiran Dokumen: ${documentAttachment.trim()}")
+                        }
+                        onSubmit(diagnosis.trim(), hospitalName.trim(), doctorName.trim(), fullNotesBuilder.toString(), recordDate.trim())
                     }
                 },
                 modifier = Modifier.testTag("health_submit_btn")

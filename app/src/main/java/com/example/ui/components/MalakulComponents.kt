@@ -45,8 +45,8 @@ import com.example.ui.theme.MalakulTheme
 import java.text.NumberFormat
 import java.util.Locale
 
-fun formatCurrency(amount: Long, symbol: String = "$"): String {
-    val formatted = NumberFormat.getNumberInstance(Locale.US).format(amount)
+fun formatCurrency(amount: Long, symbol: String = "Rp "): String {
+    val formatted = NumberFormat.getNumberInstance(Locale.GERMANY).format(amount)
     return "$symbol$formatted"
 }
 
@@ -529,6 +529,22 @@ fun IncomeExpenseBarChart(
     data: List<MonthlyComparison>,
     modifier: Modifier = Modifier
 ) {
+    if (data.isEmpty()) {
+        Box(
+            modifier = modifier
+                .fillMaxWidth()
+                .height(140.dp),
+            contentAlignment = Alignment.Center
+        ) {
+            Text(
+                text = "Belum ada data transaksi untuk grafik tren",
+                style = MaterialTheme.typography.bodyMedium,
+                color = MaterialTheme.colorScheme.onSurfaceVariant
+            )
+        }
+        return
+    }
+
     val incomeColor = MalakulTheme.colors.navyHero
     val expenseColor = MalakulTheme.colors.gold
     val gridColor = MalakulTheme.colors.cardBorder
