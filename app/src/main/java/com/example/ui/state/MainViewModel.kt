@@ -671,7 +671,32 @@ class MainViewModel(
         notes: String,
         filePart: okhttp3.MultipartBody.Part? = null
     ) {
-        val session = _uiState.value.authSession ?: return
+        val session = _uiState.value.authSession
+        if (session == null) {
+            // Mock / Offline Mode
+            val newMockDoc = FamilyDocument(
+                id = "doc-${System.currentTimeMillis()}",
+                title = title,
+                category = DocumentCategory.fromRaw(category),
+                fileFormat = if (filePart != null) "PDF" else "DOC",
+                status = DocumentStatus.ACTIVE,
+                issueDate = documentDate,
+                expiryDate = "2030-12-31",
+                ownerName = _uiState.value.activeUser.fullName,
+                accessLevel = AccessLevel.FAMILY_SHARED,
+                verifiedBy = "Mas Azam",
+                description = notes.ifBlank { "Uploaded family document." },
+                recentAuditEntries = listOf("Added by ${ _uiState.value.activeUser.fullName } just now")
+            )
+            _uiState.update { current ->
+                current.copy(
+                    documents = listOf(newMockDoc) + current.documents,
+                    actionMessage = "Dokumen \"$title\" berhasil disimpan di brankas!"
+                )
+            }
+            return
+        }
+
         viewModelScope.launch {
             _uiState.update { it.copy(isSubmitting = true, globalError = null, actionMessage = null) }
             val res = if (filePart != null) {
@@ -696,12 +721,45 @@ class MainViewModel(
             }
             when (res) {
                 is ApiResult.Success -> {
-                    _uiState.update { it.copy(isSubmitting = false, actionMessage = "Document added to vault.") }
+                    _uiState.update { it.copy(isSubmitting = false, actionMessage = "Dokumen berhasil diunggah ke brankas.") }
                     loadDocuments()
                 }
                 is ApiResult.Unauthorized -> handleTokenExpired(res.message)
                 is ApiResult.Error -> _uiState.update { it.copy(isSubmitting = false, globalError = res.message) }
             }
+        }
+    }
+
+    fun updateFamilyEvent(
+        eventId: String,
+        title: String,
+        category: EventCategory,
+        dateLabel: String,
+        timeLabel: String,
+        locationOrNote: String,
+        assignedScope: String = "Family",
+        accessLevel: AccessLevel = AccessLevel.FAMILY_SHARED
+    ) {
+        _uiState.update { current ->
+            val updatedEvents = current.familyEvents.map { event ->
+                if (event.id == eventId) {
+                    event.copy(
+                        title = title,
+                        category = category,
+                        dateLabel = dateLabel,
+                        timeLabel = timeLabel,
+                        locationOrNote = locationOrNote,
+                        assignedScope = assignedScope,
+                        accessLevel = accessLevel
+                    )
+                } else {
+                    event
+                }
+            }
+            current.copy(
+                familyEvents = updatedEvents,
+                actionMessage = "Jadwal berhasil diperbarui."
+            )
         }
     }
 

@@ -8,14 +8,17 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.rounded.ArrowBack
 import androidx.compose.material.icons.outlined.*
+import androidx.compose.material.icons.rounded.Edit
 import androidx.compose.material3.*
-import androidx.compose.runtime.Composable
+import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import com.example.domain.model.AccessLevel
 import com.example.domain.model.EventCategory
+import com.example.domain.model.FamilyEvent
 import com.example.ui.components.MalakulCard
 import com.example.ui.components.PrivacyBadge
 import com.example.ui.state.MalakulUiState
@@ -27,9 +30,23 @@ import com.example.ui.theme.MalakulTheme
 fun CalendarScreen(
     state: MalakulUiState,
     onSelectCategory: (EventCategory?) -> Unit,
-    onNavigateBack: () -> Unit,
+    onUpdateEvent: (eventId: String, title: String, category: EventCategory, dateLabel: String, timeLabel: String, locationOrNote: String, assignedScope: String) -> Unit = { _, _, _, _, _, _, _ -> },
+    onNavigateBack: (() -> Unit)? = null,
     modifier: Modifier = Modifier
 ) {
+    var editingEvent by remember { mutableStateOf<FamilyEvent?>(null) }
+
+    if (editingEvent != null) {
+        EditEventDialog(
+            event = editingEvent!!,
+            onDismiss = { editingEvent = null },
+            onConfirm = { eventId, title, category, dateLabel, timeLabel, locationOrNote, assignedScope ->
+                onUpdateEvent(eventId, title, category, dateLabel, timeLabel, locationOrNote, assignedScope)
+                editingEvent = null
+            }
+        )
+    }
+
     Scaffold(
         modifier = modifier.fillMaxSize(),
         containerColor = MaterialTheme.colorScheme.background,
@@ -42,13 +59,15 @@ fun CalendarScreen(
                     }
                 },
                 navigationIcon = {
-                    IconButton(
-                        onClick = onNavigateBack,
-                        modifier = Modifier
-                            .testTag("calendar_back_button")
-                            .size(48.dp)
-                    ) {
-                        Icon(Icons.AutoMirrored.Rounded.ArrowBack, contentDescription = "Back")
+                    if (onNavigateBack != null) {
+                        IconButton(
+                            onClick = onNavigateBack,
+                            modifier = Modifier
+                                .testTag("calendar_back_button")
+                                .size(48.dp)
+                        ) {
+                            Icon(Icons.AutoMirrored.Rounded.ArrowBack, contentDescription = "Back")
+                        }
                     }
                 },
                 colors = TopAppBarDefaults.topAppBarColors(containerColor = MaterialTheme.colorScheme.background)
@@ -126,7 +145,24 @@ fun CalendarScreen(
                                 }
                             }
                             Column(modifier = Modifier.weight(1f)) {
-                                Text(event.category.label.uppercase(), style = MaterialTheme.typography.labelSmall, color = MalakulTheme.colors.gold)
+                                Row(
+                                    modifier = Modifier.fillMaxWidth(),
+                                    horizontalArrangement = Arrangement.SpaceBetween,
+                                    verticalAlignment = Alignment.CenterVertically
+                                ) {
+                                    Text(event.category.label.uppercase(), style = MaterialTheme.typography.labelSmall, color = MalakulTheme.colors.gold)
+                                    IconButton(
+                                        onClick = { editingEvent = event },
+                                        modifier = Modifier.size(28.dp).testTag("edit_event_${event.id}")
+                                    ) {
+                                        Icon(
+                                            Icons.Rounded.Edit,
+                                            contentDescription = "Edit Event",
+                                            tint = MalakulTheme.colors.gold,
+                                            modifier = Modifier.size(18.dp)
+                                        )
+                                    }
+                                }
                                 Text(event.title, style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.SemiBold)
                                 Spacer(Modifier.height(2.dp))
                                 Text("${event.timeLabel} · ${event.locationOrNote}", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
@@ -145,4 +181,121 @@ fun CalendarScreen(
             }
         }
     }
+}
+
+@Composable
+private fun EditEventDialog(
+    event: FamilyEvent,
+    onDismiss: () -> Unit,
+    onConfirm: (
+        eventId: String,
+        title: String,
+        category: EventCategory,
+        dateLabel: String,
+        timeLabel: String,
+        locationOrNote: String,
+        assignedScope: String
+    ) -> Unit
+) {
+    var title by remember { mutableStateOf(event.title) }
+    var category by remember { mutableStateOf(event.category) }
+    var dateLabel by remember { mutableStateOf(event.dateLabel) }
+    var timeLabel by remember { mutableStateOf(event.timeLabel) }
+    var locationOrNote by remember { mutableStateOf(event.locationOrNote) }
+    var assignedScope by remember { mutableStateOf(event.assignedScope) }
+    var error by remember { mutableStateOf<String?>(null) }
+
+    AlertDialog(
+        onDismissRequest = onDismiss,
+        title = { Text("Edit Jadwal / Event") },
+        text = {
+            Column(
+                modifier = Modifier.fillMaxWidth(),
+                verticalArrangement = Arrangement.spacedBy(8.dp)
+            ) {
+                OutlinedTextField(
+                    value = title,
+                    onValueChange = { title = it; error = null },
+                    label = { Text("Judul Agenda") },
+                    singleLine = true,
+                    modifier = Modifier.fillMaxWidth().testTag("edit_event_title")
+                )
+
+                Text("Kategori", style = MaterialTheme.typography.labelMedium)
+                LazyRow(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
+                    items(EventCategory.entries) { cat ->
+                        FilterChip(
+                            selected = category == cat,
+                            onClick = { category = cat },
+                            label = { Text(cat.label) }
+                        )
+                    }
+                }
+
+                Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                    OutlinedTextField(
+                        value = dateLabel,
+                        onValueChange = { dateLabel = it; error = null },
+                        label = { Text("Tanggal (cth: 28 Nov 2026)") },
+                        singleLine = true,
+                        modifier = Modifier.weight(1.2f).testTag("edit_event_date")
+                    )
+                    OutlinedTextField(
+                        value = timeLabel,
+                        onValueChange = { timeLabel = it; error = null },
+                        label = { Text("Waktu (cth: 10:30)") },
+                        singleLine = true,
+                        modifier = Modifier.weight(1f).testTag("edit_event_time")
+                    )
+                }
+
+                OutlinedTextField(
+                    value = locationOrNote,
+                    onValueChange = { locationOrNote = it },
+                    label = { Text("Lokasi / Catatan") },
+                    singleLine = true,
+                    modifier = Modifier.fillMaxWidth().testTag("edit_event_location")
+                )
+
+                OutlinedTextField(
+                    value = assignedScope,
+                    onValueChange = { assignedScope = it },
+                    label = { Text("Penugasan / Scope") },
+                    singleLine = true,
+                    modifier = Modifier.fillMaxWidth().testTag("edit_event_scope")
+                )
+
+                if (error != null) {
+                    Text(error!!, style = MaterialTheme.typography.bodySmall, color = MalakulTheme.colors.danger)
+                }
+            }
+        },
+        confirmButton = {
+            Button(
+                onClick = {
+                    if (title.isBlank() || dateLabel.isBlank()) {
+                        error = "Judul dan tanggal wajib diisi."
+                    } else {
+                        onConfirm(
+                            event.id,
+                            title.trim(),
+                            category,
+                            dateLabel.trim(),
+                            timeLabel.trim().ifBlank { "All Day" },
+                            locationOrNote.trim(),
+                            assignedScope.trim().ifBlank { "Family" }
+                        )
+                    }
+                },
+                modifier = Modifier.testTag("edit_event_confirm_btn")
+            ) {
+                Text("Simpan Perubahan")
+            }
+        },
+        dismissButton = {
+            TextButton(onClick = onDismiss) {
+                Text("Batal")
+            }
+        }
+    )
 }

@@ -294,8 +294,8 @@ private fun MalakulNavContent(
                 state = state,
                 onRefresh = { viewModel.loadDocuments() },
                 onDismissFeedback = { viewModel.clearFeedbackMessages() },
-                onAddDocument = { title, category, docDate, notes ->
-                    viewModel.addDocument(title, category, docDate, notes)
+                onAddDocument = { title, category, docDate, notes, filePart ->
+                    viewModel.addDocument(title, category, docDate, notes, filePart)
                 },
                 onDeleteDocument = { viewModel.deleteDocument(it) },
                 onSearchChange = { viewModel.updateDocumentSearch(it) },
@@ -320,6 +320,17 @@ private fun MalakulNavContent(
             CalendarScreen(
                 state = state,
                 onSelectCategory = { viewModel.selectCalendarCategory(it) },
+                onUpdateEvent = { eventId, title, category, dateLabel, timeLabel, locationOrNote, assignedScope ->
+                    viewModel.updateFamilyEvent(
+                        eventId = eventId,
+                        title = title,
+                        category = category,
+                        dateLabel = dateLabel,
+                        timeLabel = timeLabel,
+                        locationOrNote = locationOrNote,
+                        assignedScope = assignedScope
+                    )
+                },
                 onNavigateBack = { navController.popBackStack() }
             )
         }

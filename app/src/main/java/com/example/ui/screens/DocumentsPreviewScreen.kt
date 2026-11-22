@@ -29,6 +29,14 @@ import com.example.ui.theme.MalakulTheme
 import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale
+import android.net.Uri
+import android.provider.OpenableColumns
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
+import androidx.compose.ui.platform.LocalContext
+import okhttp3.MediaType.Companion.toMediaTypeOrNull
+import okhttp3.MultipartBody
+import okhttp3.RequestBody.Companion.toRequestBody
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -36,7 +44,7 @@ fun DocumentsPreviewScreen(
     state: MalakulUiState,
     onRefresh: () -> Unit,
     onDismissFeedback: () -> Unit,
-    onAddDocument: (title: String, category: String, documentDate: String, notes: String) -> Unit,
+    onAddDocument: (title: String, category: String, documentDate: String, notes: String, filePart: okhttp3.MultipartBody.Part?) -> Unit,
     onDeleteDocument: (String) -> Unit,
     onSearchChange: (String) -> Unit,
     onSelectCategory: (DocumentCategory) -> Unit,
@@ -50,8 +58,8 @@ fun DocumentsPreviewScreen(
         AddDocumentDialog(
             isSubmitting = state.isSubmitting,
             onDismiss = { showAddDialog = false },
-            onSubmit = { title, category, docDate, notes ->
-                onAddDocument(title, category, docDate, notes)
+            onSubmit = { title, category, docDate, notes, filePart ->
+                onAddDocument(title, category, docDate, notes, filePart)
                 showAddDialog = false
             }
         )
@@ -362,26 +370,109 @@ fun DocumentsPreviewScreen(
 private fun AddDocumentDialog(
     isSubmitting: Boolean,
     onDismiss: () -> Unit,
-    onSubmit: (title: String, category: String, documentDate: String, notes: String) -> Unit
+    onSubmit: (title: String, category: String, documentDate: String, notes: String, filePart: MultipartBody.Part?) -> Unit
 ) {
+    val context = LocalContext.current
     val todayIso = remember { SimpleDateFormat("yyyy-MM-dd", Locale.US).format(Date()) }
     var title by remember { mutableStateOf("") }
     var category by remember { mutableStateOf("Identity") }
     var documentDate by remember { mutableStateOf(todayIso) }
     var notes by remember { mutableStateOf("") }
+    var selectedFileUri by remember { mutableStateOf<Uri?>(null) }
+    var selectedFileName by remember { mutableStateOf<String?>(null) }
     var error by remember { mutableStateOf<String?>(null) }
+
+    val filePickerLauncher = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.GetContent()
+    ) { uri: Uri? ->
+        if (uri != null) {
+            selectedFileUri = uri
+            var displayName = "dokumen_terpilih"
+            try {
+                context.contentResolver.query(uri, null, null, null, null)?.use { cursor ->
+                    val nameIndex = cursor.getColumnIndex(OpenableColumns.DISPLAY_NAME)
+                    if (nameIndex != -1 && cursor.moveToFirst()) {
+                        displayName = cursor.getString(nameIndex) ?: displayName
+                    }
+                }
+            } catch (_: Exception) {}
+            selectedFileName = displayName
+            if (title.isBlank()) {
+                title = displayName.substringBeforeLast(".")
+            }
+        }
+    }
 
     val quickCategories = listOf("Identity", "Passport", "Birth Certificate", "Insurance", "Property", "Medical", "Other")
 
     AlertDialog(
         onDismissRequest = onDismiss,
-        title = { Text("Add Family Document") },
+        title = { Text("Upload Dokumen Brankas") },
         text = {
             Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                // File Picker Section
+                Surface(
+                    shape = RoundedCornerShape(12.dp),
+                    color = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f),
+                    border = BorderStroke(1.dp, MalakulTheme.colors.cardBorder),
+                    modifier = Modifier.fillMaxWidth()
+                ) {
+                    Column(
+                        modifier = Modifier.padding(12.dp),
+                        verticalArrangement = Arrangement.spacedBy(8.dp)
+                    ) {
+                        Row(
+                            verticalAlignment = Alignment.CenterVertically,
+                            horizontalArrangement = Arrangement.spacedBy(8.dp)
+                        ) {
+                            Icon(
+                                Icons.Rounded.CloudUpload,
+                                contentDescription = null,
+                                tint = MalakulTheme.colors.gold
+                            )
+                            Text(
+                                text = "Berkas / File Fisik",
+                                style = MaterialTheme.typography.titleSmall,
+                                fontWeight = FontWeight.SemiBold
+                            )
+                        }
+
+                        if (selectedFileName != null) {
+                            Row(
+                                modifier = Modifier.fillMaxWidth(),
+                                horizontalArrangement = Arrangement.SpaceBetween,
+                                verticalAlignment = Alignment.CenterVertically
+                            ) {
+                                Text(
+                                    text = selectedFileName!!,
+                                    style = MaterialTheme.typography.bodyMedium,
+                                    fontWeight = FontWeight.Medium,
+                                    color = MalakulTheme.colors.gold,
+                                    maxLines = 1,
+                                    overflow = TextOverflow.Ellipsis,
+                                    modifier = Modifier.weight(1f)
+                                )
+                                TextButton(onClick = { filePickerLauncher.launch("*/*") }) {
+                                    Text("Ganti")
+                                }
+                            }
+                        } else {
+                            OutlinedButton(
+                                onClick = { filePickerLauncher.launch("*/*") },
+                                modifier = Modifier.fillMaxWidth()
+                            ) {
+                                Icon(Icons.Rounded.AttachFile, contentDescription = null, modifier = Modifier.size(18.dp))
+                                Spacer(Modifier.width(6.dp))
+                                Text("Pilih File (PDF / Gambar / Doc)")
+                            }
+                        }
+                    }
+                }
+
                 OutlinedTextField(
                     value = title,
                     onValueChange = { title = it; error = null },
-                    label = { Text("Document Title") },
+                    label = { Text("Judul Dokumen") },
                     singleLine = true,
                     modifier = Modifier.fillMaxWidth().testTag("doc_title_input")
                 )
@@ -397,14 +488,14 @@ private fun AddDocumentDialog(
                 OutlinedTextField(
                     value = documentDate,
                     onValueChange = { documentDate = it; error = null },
-                    label = { Text("Document Date (YYYY-MM-DD)") },
+                    label = { Text("Tanggal Dokumen (YYYY-MM-DD)") },
                     singleLine = true,
                     modifier = Modifier.fillMaxWidth().testTag("doc_date_input")
                 )
                 OutlinedTextField(
                     value = notes,
                     onValueChange = { notes = it },
-                    label = { Text("Notes / Metadata") },
+                    label = { Text("Catatan / Keterangan Dokumen") },
                     minLines = 2,
                     modifier = Modifier.fillMaxWidth().testTag("doc_notes_input")
                 )
@@ -418,14 +509,26 @@ private fun AddDocumentDialog(
                 enabled = !isSubmitting,
                 onClick = {
                     if (title.isBlank() || documentDate.isBlank()) {
-                        error = "Please enter a title and document date."
+                        error = "Judul dan tanggal dokumen wajib diisi."
                     } else {
-                        onSubmit(title.trim(), category.trim(), documentDate.trim(), notes.trim())
+                        var part: MultipartBody.Part? = null
+                        selectedFileUri?.let { uri ->
+                            try {
+                                val bytes = context.contentResolver.openInputStream(uri)?.use { it.readBytes() }
+                                if (bytes != null) {
+                                    val mimeType = context.contentResolver.getType(uri) ?: "application/octet-stream"
+                                    val requestBody = bytes.toRequestBody(mimeType.toMediaTypeOrNull())
+                                    val filename = selectedFileName ?: "document.pdf"
+                                    part = MultipartBody.Part.createFormData("file", filename, requestBody)
+                                }
+                            } catch (_: Exception) {}
+                        }
+                        onSubmit(title.trim(), category.trim(), documentDate.trim(), notes.trim(), part)
                     }
                 },
                 modifier = Modifier.testTag("doc_submit_btn")
             ) {
-                Text("Save")
+                Text(if (selectedFileUri != null) "Upload & Simpan" else "Simpan")
             }
         },
         dismissButton = {
